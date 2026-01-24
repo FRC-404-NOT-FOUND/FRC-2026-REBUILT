@@ -96,6 +96,14 @@ public final class Constants {
         kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
   }
 
+  public static final class ShooterContants {
+    public static final double theta = Math.toRadians(0); // angle of shooter off horizontal
+    public static final double g = 9.82; // gravity
+    public static final double radius = 0; // shooter wheel
+
+    public static final int shooterOneCanID = 0;
+  }
+
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
   }
