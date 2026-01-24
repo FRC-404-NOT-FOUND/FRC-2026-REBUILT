@@ -3,7 +3,7 @@
 Please ensure that you add anything left half-finished to the list, and remove anything you finished.
 
 ## Shooter
-- Fix all CAN IDs in Constants.java
+- Fix Constants.java
 - Tune low/mid/high velocities
 - Fix trapezoid profile constraints
 - Tune feedforward as needed. kV should theoretically already be pretty close, kS definitely needs tuning
