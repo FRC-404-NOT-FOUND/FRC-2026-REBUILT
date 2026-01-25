@@ -14,8 +14,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -29,7 +27,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder motorOneEncoder;
   private final SparkMaxConfig motorOneConfig;
 
-  //empirically tuned velocities to use on the shooter at low, mid, and high distances from the hub
+  // empirically tuned velocities to use on the shooter at low, mid, and high distances from the hub
   public static final int lowVel = 0;
   public static final int midVel = 0;
   public static final int highVel = 0;

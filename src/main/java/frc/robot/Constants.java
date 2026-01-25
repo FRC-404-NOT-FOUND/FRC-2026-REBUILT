@@ -105,6 +105,10 @@ public final class Constants {
     public static final int shooterOneCanID = 0;
   }
 
+  public static final class IntakeContants {
+    public static final int intakeCanID = 0;
+  }
+
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
   }
