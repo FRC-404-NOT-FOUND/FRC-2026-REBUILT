@@ -4,7 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -107,6 +112,22 @@ public final class Constants {
 
   public static final class IntakeContants {
     public static final int intakeCanID = 0;
+  }
+
+  public static final class VisionConstants {
+    // Camera names from PV
+    public static final String cam1 = "cameraOne";
+    public static final String cam2 = "cameraOne";
+
+    // Camera offsets from robot center
+    public static final Transform3d kRobotToCamOne =
+      new Transform3d(new Translation3d(0, 0.0, 0), new Rotation3d(0, 0, 0));
+    public static final Transform3d kRobotToCamTwo =
+      new Transform3d(new Translation3d(0, 0.0, 0), new Rotation3d(0, 0, 0));
+
+    // April tags
+    public static final AprilTagFieldLayout kTagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   }
 
   public static final class NeoMotorConstants {

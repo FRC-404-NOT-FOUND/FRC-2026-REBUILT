@@ -6,11 +6,7 @@ package frc.robot;
 
 import java.util.Optional;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.DriveSubsystem;
 
 import org.photonvision.EstimatedRobotPose;
@@ -18,23 +14,13 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 
 public class Vision {
-  // April tags
-  public static final AprilTagFieldLayout kTagLayout =
-    AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-
   // Cameras
-  private final PhotonCamera cameraOne = new PhotonCamera("cameraOne");
-  private final PhotonCamera cameraTwo = new PhotonCamera("cameraTwo");
-  
-  // Camera offsets from robot center
-  public static final Transform3d kRobotToCamOne =
-    new Transform3d(new Translation3d(0, 0.0, 0), new Rotation3d(0, 0, 0));
-  public static final Transform3d kRobotToCamTwo =
-    new Transform3d(new Translation3d(0, 0.0, 0), new Rotation3d(0, 0, 0));
+  private final PhotonCamera camera1 = new PhotonCamera(VisionConstants.cam1);
+  private final PhotonCamera camera2 = new PhotonCamera(VisionConstants.cam2);
 
   // Pose estimator
-  PhotonPoseEstimator poseEstimatorOne = new PhotonPoseEstimator(kTagLayout, kRobotToCamOne);
-  PhotonPoseEstimator poseEstimatorTwo = new PhotonPoseEstimator(kTagLayout, kRobotToCamTwo);
+  PhotonPoseEstimator poseEstimator1 = new PhotonPoseEstimator(VisionConstants.kTagLayout, VisionConstants.kRobotToCamOne);
+  PhotonPoseEstimator poseEstimator2 = new PhotonPoseEstimator(VisionConstants.kTagLayout, VisionConstants.kRobotToCamTwo);
 
   // Add drive
   private final DriveSubsystem drive;
@@ -46,30 +32,30 @@ public class Vision {
 
   public void periodic() {
     // This method will be called once per scheduler run
-    var resultOne = cameraOne.getAllUnreadResults();
-    var resultTwo = cameraTwo.getAllUnreadResults();
+    var result1 = camera1.getAllUnreadResults();
+    var result2 = camera2.getAllUnreadResults();
 
-    Optional<EstimatedRobotPose> estimationOne;
-    for (int i = 0; i < resultOne.size(); i++) {
-      estimationOne = poseEstimatorOne.estimateCoprocMultiTagPose(resultOne.get(i));
-      if (estimationOne.isEmpty()) {
-        estimationOne = poseEstimatorOne.estimateLowestAmbiguityPose(resultOne.get(i));
+    Optional<EstimatedRobotPose> estimation1;
+    for (int i = 0; i < result1.size(); i++) {
+      estimation1 = poseEstimator1.estimateCoprocMultiTagPose(result1.get(i));
+      if (estimation1.isEmpty()) {
+        estimation1 = poseEstimator2.estimateLowestAmbiguityPose(result1.get(i));
       }
 
-      if (estimationOne.isPresent()) {
-        drive.addVisionMeasurement(estimationOne);
+      if (estimation1.isPresent()) {
+        drive.addVisionMeasurement(estimation1);
       }
     }
     
-    Optional<EstimatedRobotPose> estimationTwo;
-    for (int i = 0; i < resultTwo.size(); i++) {
-      estimationTwo = poseEstimatorTwo.estimateCoprocMultiTagPose(resultTwo.get(i));
-      if (estimationTwo.isEmpty()) {
-        estimationTwo = poseEstimatorTwo.estimateLowestAmbiguityPose(resultTwo.get(i));
+    Optional<EstimatedRobotPose> estimation2;
+    for (int i = 0; i < result2.size(); i++) {
+      estimation2 = poseEstimator2.estimateCoprocMultiTagPose(result2.get(i));
+      if (estimation2.isEmpty()) {
+        estimation2 = poseEstimator2.estimateLowestAmbiguityPose(result2.get(i));
       }
 
-      if (estimationTwo.isPresent()) {
-        drive.addVisionMeasurement(estimationTwo);
+      if (estimation2.isPresent()) {
+        drive.addVisionMeasurement(estimation2);
       }
     }
   }
