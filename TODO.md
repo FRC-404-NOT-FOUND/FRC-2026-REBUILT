@@ -16,3 +16,7 @@ Please ensure that you add anything left half-finished to the list, and remove a
 - Fix CAN ID in Constants.java
 - Figure out inversion
 - Test different motor power levels w/ build team
+
+## Vision
+- Fix camera offsets to robot
+- Add utility other than pose estimation
