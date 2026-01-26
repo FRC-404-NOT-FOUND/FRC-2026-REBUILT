@@ -36,14 +36,12 @@ public class VisionSubsystem extends SubsystemBase {
   PhotonPoseEstimator poseEstimatorOne = new PhotonPoseEstimator(kTagLayout, kRobotToCamOne);
   PhotonPoseEstimator poseEstimatorTwo = new PhotonPoseEstimator(kTagLayout, kRobotToCamTwo);
 
-  // Current estimates
-  private Optional<EstimatedRobotPose> latestEstimate = Optional.empty();
+  // Add drive
+  private final DriveSubsystem drive;
 
   /** Creates a new VisionSubsystem. */
-  public VisionSubsystem() {}
-
-  public Optional<EstimatedRobotPose> getLatestPoseEstimate() {
-    return latestEstimate;
+  public VisionSubsystem(DriveSubsystem drive) {
+    this.drive = drive;
   }
 
   @Override
@@ -60,7 +58,7 @@ public class VisionSubsystem extends SubsystemBase {
       }
 
       if (estimationOne.isPresent()) {
-        latestEstimate = estimationOne;
+        drive.addVisionMeasurement(estimationOne);
       }
     }
     
@@ -72,7 +70,7 @@ public class VisionSubsystem extends SubsystemBase {
       }
 
       if (estimationTwo.isPresent()) {
-        latestEstimate = estimationTwo;
+        //latestEstimate = estimationTwo;
       }
     }
   }

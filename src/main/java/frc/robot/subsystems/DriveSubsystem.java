@@ -7,6 +7,11 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
+
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
+
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -59,11 +64,12 @@ public class DriveSubsystem extends SubsystemBase {
       m_rearRight.getPosition()
      }, new Pose2d());
 
-  private final VisionSubsystem vision;
+  public void addVisionMeasurement(Optional<EstimatedRobotPose> visionPose) {
+    mPoseEstimator.addVisionMeasurement(visionPose.get().estimatedPose.toPose2d(), visionPose.get().timestampSeconds);
+  }
 
   /** Creates a new DriveSubsystem. */
-  public DriveSubsystem(VisionSubsystem vision) {
-    this.vision = vision;
+  public DriveSubsystem() {
 
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
@@ -80,14 +86,6 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-
-    vision.getLatestPoseEstimate().ifPresent(estimate -> {
-      mPoseEstimator.addVisionMeasurement(
-        estimate.estimatedPose.toPose2d(),
-        estimate.timestampSeconds
-      );
-    });
-
   }
 
   /**

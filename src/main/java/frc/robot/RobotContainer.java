@@ -36,8 +36,7 @@ import java.util.List;
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final VisionSubsystem vision = new VisionSubsystem();
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem(vision);
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final ShooterSubsystem shooter = new ShooterSubsystem();
 
   // The driver's controller
