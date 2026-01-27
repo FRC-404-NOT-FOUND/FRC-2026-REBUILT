@@ -11,6 +11,7 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
+import edu.wpi.first.math.Matrix;
 
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,11 +20,12 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.Vision;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -63,8 +65,8 @@ public class DriveSubsystem extends SubsystemBase {
       m_rearRight.getPosition()
      }, new Pose2d());
 
-  public void addVisionMeasurement(Optional<EstimatedRobotPose> visionPose) {
-    mPoseEstimator.addVisionMeasurement(visionPose.get().estimatedPose.toPose2d(), visionPose.get().timestampSeconds);
+  public void addVisionMeasurement(Optional<EstimatedRobotPose> visionPose, Matrix<N3, N1> stdDevs) {
+    mPoseEstimator.addVisionMeasurement(visionPose.get().estimatedPose.toPose2d(), visionPose.get().timestampSeconds, stdDevs);
   }
 
   /** Creates a new DriveSubsystem. */
