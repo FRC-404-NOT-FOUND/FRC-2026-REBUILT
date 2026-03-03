@@ -8,8 +8,10 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.AlternateEncoderConfig;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,7 +20,10 @@ import frc.robot.Constants.ClimberConstants;
 public class ClimberSubsystem extends SubsystemBase {
   private final SparkMax oneStageMotor;
   private final SparkMax twoStageMotor;
+  private final RelativeEncoder oneStageEncoder;
+  private final RelativeEncoder twoStageEncoder;
   private final SparkMaxConfig motorConfig;
+  private final AlternateEncoderConfig encoderConfig;
   private final PIDController oneStagePID;
   private final PIDController twoStagePID;
 
@@ -26,11 +31,15 @@ public class ClimberSubsystem extends SubsystemBase {
   public ClimberSubsystem() {
     oneStageMotor = new SparkMax(ClimberConstants.oneStageCanID, MotorType.kBrushless);
     twoStageMotor = new SparkMax(ClimberConstants.twoStageCanID, MotorType.kBrushless);
+    oneStageEncoder = oneStageMotor.getEncoder();
+    twoStageEncoder = twoStageMotor.getAlternateEncoder();
     motorConfig = new SparkMaxConfig();
+    encoderConfig = new AlternateEncoderConfig();
 
     motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
     motorConfig.inverted(false);
     motorConfig.smartCurrentLimit(40);
+    encoderConfig.positionConversionFactor(0); // Set this to the appropriate conversion factor for your encoder
 
     oneStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     twoStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -53,13 +62,13 @@ public class ClimberSubsystem extends SubsystemBase {
 
   /**Drive motor to first stage in rotations */
   public void setOneStage(double position) {
-    double output = oneStagePID.calculate(oneStageMotor.getEncoder().getPosition(), position);
+    double output = oneStagePID.calculate(oneStageEncoder.getPosition(), position);
     oneStageMotor.set(output);
   }
   
   /**Drive motor to second stage in rotations */
   public void setTwoStage(double position) {
-    double output = twoStagePID.calculate(twoStageMotor.getEncoder().getPosition(), position);
+    double output = twoStagePID.calculate(twoStageEncoder.getPosition(), position);
     twoStageMotor.set(output);
   }
   
