@@ -13,6 +13,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.AlternateEncoderConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
@@ -22,30 +23,40 @@ public class ClimberSubsystem extends SubsystemBase {
   private final SparkMax twoStageMotor;
   private final RelativeEncoder oneStageEncoder;
   private final RelativeEncoder twoStageEncoder;
-  private final SparkMaxConfig motorConfig;
-  private final AlternateEncoderConfig encoderConfig;
   private final PIDController oneStagePID;
   private final PIDController twoStagePID;
-
+  private static final double POSITION_CONVERSION_FACTOR = 1.0; // We should most likely change this so it doesn't blow up PID
   /** Creates a new ClimberSubsystem. */
   public ClimberSubsystem() {
     oneStageMotor = new SparkMax(ClimberConstants.oneStageCanID, MotorType.kBrushless);
     twoStageMotor = new SparkMax(ClimberConstants.twoStageCanID, MotorType.kBrushless);
-    oneStageEncoder = oneStageMotor.getEncoder();
+
+    AlternateEncoderConfig encoderConfig = new AlternateEncoderConfig();
+    encoderConfig.positionConversionFactor(POSITION_CONVERSION_FACTOR);
+
+    SparkMaxConfig oneStageConfig = new SparkMaxConfig();
+    oneStageConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
+    oneStageConfig.inverted(false);
+    oneStageConfig.smartCurrentLimit(40);
+    oneStageConfig.apply(encoderConfig); 
+
+    SparkMaxConfig twoStageConfig = new SparkMaxConfig();
+    twoStageConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
+    twoStageConfig.inverted(false);
+    twoStageConfig.smartCurrentLimit(40);
+    twoStageConfig.apply(encoderConfig);
+
+    oneStageMotor.configure(oneStageConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    twoStageMotor.configure(twoStageConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    oneStageEncoder = oneStageMotor.getAlternateEncoder();
     twoStageEncoder = twoStageMotor.getAlternateEncoder();
-    motorConfig = new SparkMaxConfig();
-    encoderConfig = new AlternateEncoderConfig();
-
-    motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-    motorConfig.inverted(false);
-    motorConfig.smartCurrentLimit(40);
-    encoderConfig.positionConversionFactor(0); // Set this to the appropriate conversion factor for your encoder
-
-    oneStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    twoStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
+    
     oneStagePID = new PIDController(0.1, 0, 0);
     twoStagePID = new PIDController(0.1, 0, 0);
+
+    oneStagePID.setTolerance(0.05);
+    twoStagePID.setTolerance(0.05);
   }
 
   public void setCoastMode(SparkMax motor) {
@@ -63,15 +74,23 @@ public class ClimberSubsystem extends SubsystemBase {
   /**Drive motor to first stage in rotations */
   public void setOneStage(double position) {
     double output = oneStagePID.calculate(oneStageEncoder.getPosition(), position);
-    oneStageMotor.set(output);
+    oneStageMotor.set(MathUtil.clamp(output, -1.0, 1.0));
   }
   
   /**Drive motor to second stage in rotations */
   public void setTwoStage(double position) {
     double output = twoStagePID.calculate(twoStageEncoder.getPosition(), position);
-    twoStageMotor.set(output);
+    twoStageMotor.set(MathUtil.clamp(output, -1.0, 1.0));
   }
   
+      public boolean oneStageAtSetpoint() {
+        return oneStagePID.atSetpoint();
+    }
+
+    public boolean twoStageAtSetpoint() {
+        return twoStagePID.atSetpoint();
+    }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
