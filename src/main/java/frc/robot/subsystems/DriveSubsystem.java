@@ -151,8 +151,6 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-
-    System.out.println("Gyro yaw: " + getHeading());
   }
 
   /**

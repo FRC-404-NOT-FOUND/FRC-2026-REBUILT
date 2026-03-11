@@ -155,8 +155,8 @@ public final class Constants {
     public static final String cam2 = "Intake Camera";
 
     // Camera offsets from robot center
-    public static final Transform3d kRobotToCamOne = new Transform3d(new Translation3d(0.127, -0.3175, 0.51435),
-        new Rotation3d(0, 0, -Math.PI / 2));
+    public static final Transform3d kRobotToCamOne = new Transform3d(new Translation3d(-0.127, 0.3175, 0.51435),
+        new Rotation3d(0, 0, Math.PI / 2));
     public static final Transform3d kRobotToCamTwo = new Transform3d(new Translation3d(0, 0.0, 0),
         new Rotation3d(0, 0, 0));
 

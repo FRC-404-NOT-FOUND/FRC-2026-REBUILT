@@ -21,7 +21,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class ShooterSubsystem extends SubsystemBase {
   // Empirically tuned velocities to use on the shooter at low, mid, and high
   // distances from the hub
-  public static final int lowVel = 300;
+  public static final int lowVel = 100;
   public static final int midVel = 0;
   public static final int highVel = 0; // 80 percent
 

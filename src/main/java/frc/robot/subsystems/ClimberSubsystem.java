@@ -19,8 +19,6 @@ public class ClimberSubsystem extends SubsystemBase {
   private final SparkMax oneStageMotor;
   private final SparkMax twoStageMotor;
   private final SparkMaxConfig motorConfig;
-  private final PIDController oneStagePID;
-  private final PIDController twoStagePID;
 
   /** Creates a new ClimberSubsystem. */
   public ClimberSubsystem() {
@@ -36,9 +34,6 @@ public class ClimberSubsystem extends SubsystemBase {
     oneStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     motorConfig.inverted(true);
     twoStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-    oneStagePID = new PIDController(0.1, 0, 0);
-    twoStagePID = new PIDController(0.1, 0, 0);
   }
 
   public void setCoastMode(SparkMax motor) {
@@ -53,40 +48,12 @@ public class ClimberSubsystem extends SubsystemBase {
     motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
-  /** Drive motor to first stage in rotations */
-  public void setOneStage(double position) {
-    double output = oneStagePID.calculate(oneStageMotor.getEncoder().getPosition(), position);
-    oneStageMotor.setVoltage(output);
+  public void oneStageSet(double percentage) {
+    oneStageMotor.set(percentage);
   }
 
-  /** Drive motor to second stage in rotations */
-  public void setTwoStage(double position) {
-    double output = twoStagePID.calculate(twoStageMotor.getEncoder().getPosition(), position);
-    twoStageMotor.setVoltage(output);
-  }
-
-  public void oneStageUp() {
-    oneStageMotor.set(0.5);
-  }
-
-  public void oneStageDown() {
-    oneStageMotor.set(-0.5);
-  }
-
-  public void twoStageUp() {
-    twoStageMotor.set(0.5);
-  }
-
-  public void twoStageDown() {
-    twoStageMotor.set(-0.5);
-  }
-
-  public void oneStageStop() {
-    oneStageMotor.set(0);
-  }
-
-  public void twoStageStop() {
-    twoStageMotor.set(0);
+  public void twoStageSet(double percentage) {
+    twoStageMotor.set(percentage);
   }
 
   @Override
