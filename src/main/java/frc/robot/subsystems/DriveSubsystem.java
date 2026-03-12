@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import org.photonvision.EstimatedRobotPose;
@@ -32,6 +33,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import com.studica.frc.Navx;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.PathPlannerConstants;
@@ -39,6 +41,7 @@ import frc.robot.Constants.ShooterConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 
 public class DriveSubsystem extends SubsystemBase {
   // Create MAXSwerveModules
@@ -64,6 +67,10 @@ public class DriveSubsystem extends SubsystemBase {
 
   // The gyro sensor
   private final Navx m_gyro = new Navx(DriveConstants.kGyroPort, 100);
+
+  // Pose logging
+  StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
+      .getStructTopic("MyPose", Pose2d.struct).publish();
 
   // PID control for auto lock on
   private PIDController mFeedbackController = new PIDController(1, 0, 0); // TUNE THIS.
@@ -138,11 +145,6 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    Pose2d currentPose = getPose();
-    double xPose = currentPose.getX();
-    double yPose = currentPose.getY();
-    poseTable.getEntry("X").setDouble(xPose);
-    poseTable.getEntry("Y").setDouble(yPose);
     mPoseEstimator.update(
         Rotation2d.fromDegrees(getHeading()),
         new SwerveModulePosition[] {
@@ -151,6 +153,12 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+    System.out.println("Gyro Yaw: " + getHeading());
+    SmartDashboard.putNumber("Gyro Raw Degrees", m_gyro.getYaw().in(Degrees));
+    SmartDashboard.putNumber("Gyro Raw Radians", m_gyro.getYaw().in(Radians));
+    SmartDashboard.putNumber("Pose Theta Degrees", getPose().getRotation().getDegrees());
+    SmartDashboard.putNumber("Pose Theta Radians", getPose().getRotation().getRadians());
+    publisher.set(getPose());
   }
 
   /**
