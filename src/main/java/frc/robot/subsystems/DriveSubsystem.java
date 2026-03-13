@@ -67,6 +67,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   // The gyro sensor
   private final Navx m_gyro = new Navx(DriveConstants.kGyroPort, 100);
+  private double gyroAngle;
 
   // Pose logging
   StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
@@ -79,7 +80,7 @@ public class DriveSubsystem extends SubsystemBase {
   // Pose estimation
   SwerveDrivePoseEstimator mPoseEstimator = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(getHeading()),
+      Rotation2d.fromDegrees(m_gyro.getYaw().in(Degrees)),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -145,15 +146,20 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    gyroAngle = m_gyro.getYaw().in(Degrees) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
     mPoseEstimator.update(
-        Rotation2d.fromDegrees(getHeading()),
+        Rotation2d.fromDegrees(gyroAngle),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+<<<<<<< HEAD
    publisher.set(getPose());
+=======
+    publisher.set(getPose());
+>>>>>>> 7b00ef9aac53f5895b73a65c031bb2a42ced8358
   }
 
   /**
@@ -172,7 +178,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetPose(Pose2d pose) {
     mPoseEstimator.resetPosition(
-        Rotation2d.fromDegrees(getHeading()),
+        getHeading(),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -229,7 +235,7 @@ public class DriveSubsystem extends SubsystemBase {
         fieldRelative
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered * alwaysBlueInvert,
                 ySpeedDelivered * alwaysBlueInvert, rotDelivered,
-                Rotation2d.fromDegrees(getHeading()))
+                (getHeading()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -271,7 +277,7 @@ public class DriveSubsystem extends SubsystemBase {
     double desiredDelta = MathUtil.angleModulus(Math.atan2(toHub.getY(), toHub.getX())
         - ShooterConstants.shooterOffset.getRotation().toRotation2d().getRadians());
 
-    omega = mFeedbackController.calculate(Math.toRadians(getHeading()), desiredDelta);
+    omega = mFeedbackController.calculate(getHeading().getRadians(), desiredDelta);
     if (mFeedbackController.atSetpoint()) {
       omega = 0;
     }
@@ -313,8 +319,8 @@ public class DriveSubsystem extends SubsystemBase {
    *
    * @return the robot's heading in degrees, from -180 to 180
    */
-  public double getHeading() {
-    return m_gyro.getYaw().in(Degrees) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  public Rotation2d getHeading() {
+    return mPoseEstimator.getEstimatedPosition().getRotation();
   }
 
   /**
