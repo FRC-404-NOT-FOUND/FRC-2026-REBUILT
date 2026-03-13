@@ -21,7 +21,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class ShooterSubsystem extends SubsystemBase {
   // Empirically tuned velocities to use on the shooter at low, mid, and high
   // distances from the hub
-  public static final int lowVel = 100;
+  public static final int lowVel = 300;
   public static final int midVel = 0;
   public static final int highVel = 0; // 80 percent
 
@@ -51,6 +51,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     motorOneConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
     motorOneConfig.inverted(false);
+    motorOneConfig.smartCurrentLimit(35);
     motorOneConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gear box, rad/sec
     motorOne.configure(motorOneConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 

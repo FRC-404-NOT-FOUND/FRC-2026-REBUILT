@@ -16,6 +16,7 @@ import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -90,24 +91,25 @@ public class RobotContainer {
 
     new JoystickButton(driverController, XboxController.Button.kA.value)
         .whileTrue(new StartEndCommand(
-            () -> spindexer.reverseSpindexer(),
+            () -> spindexer.startSpindexer(),
             () -> spindexer.stopSpindexer(),
             spindexer));
 
     // Have to actually turn this into a command probably, need spindexer + kicker
     new JoystickButton(driverController, XboxController.Button.kB.value)
-        .whileTrue(new RunCommand(
-            () -> shooter.setVelocity(ShooterSubsystem.lowVel),
-            shooter)
-            .beforeStarting(() -> {
-              kicker.startKicker();
-              spindexer.startSpindexer();
-            })
-            .finallyDo(() -> {
-              shooter.stopShooter();
-              kicker.stopKicker();
-              spindexer.stopSpindexer();
-            }));
+        .whileTrue(
+            new SequentialCommandGroup(
+                new RunCommand(() -> shooter.setVelocity(ShooterSubsystem.lowVel), shooter)
+                    .withTimeout(1), // spin up shooter alone first
+                new RunCommand(() -> {
+                  shooter.setVelocity(ShooterSubsystem.lowVel);
+                  kicker.startKicker();
+                  spindexer.startSpindexer();
+                }, shooter, kicker, spindexer)).finallyDo(() -> {
+                  shooter.stopShooter();
+                  kicker.stopKicker();
+                  spindexer.stopSpindexer();
+                }));
 
     new JoystickButton(driverController, XboxController.Button.kStart.value)
         .onTrue(new RunCommand(

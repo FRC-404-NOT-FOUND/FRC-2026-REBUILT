@@ -153,12 +153,7 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-    System.out.println("Gyro Yaw: " + getHeading());
-    SmartDashboard.putNumber("Gyro Raw Degrees", m_gyro.getYaw().in(Degrees));
-    SmartDashboard.putNumber("Gyro Raw Radians", m_gyro.getYaw().in(Radians));
-    SmartDashboard.putNumber("Pose Theta Degrees", getPose().getRotation().getDegrees());
-    SmartDashboard.putNumber("Pose Theta Radians", getPose().getRotation().getRadians());
-    publisher.set(getPose());
+   publisher.set(getPose());
   }
 
   /**

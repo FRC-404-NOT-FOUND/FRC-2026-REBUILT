@@ -32,7 +32,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** Spin the intake. */
   public void spinIntake() {
-    motor.set(1);
+    motor.set(0.85);
     intakeIsSpinning = true;
   }
 
