@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.aimbot.StationaryAimbotCommand;
 import frc.robot.subsystems.ClimberSubsystem;
@@ -56,6 +57,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Stationary Aimbot", new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
 
     autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", autoChooser);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -120,7 +122,7 @@ public class RobotContainer {
                 }));
 
     new JoystickButton(driverController, XboxController.Button.kStart.value)
-        .onTrue(new RunCommand(
+        .onTrue(new InstantCommand(
             () -> drive.setX(),
             drive));
 
@@ -134,7 +136,7 @@ public class RobotContainer {
                 intake.spinIntake();
                 spindexer.startSpindexer();
               }
-            }, intake));
+            }, intake, spindexer));
 
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
         .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer));

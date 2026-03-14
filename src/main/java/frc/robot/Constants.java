@@ -185,16 +185,21 @@ public final class Constants {
   }
 
   public static final class FieldConstants {
-    public static Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-    public static Pose3d hubPose;
+    // Hub positions hardcoded — do NOT read alliance in a static block
+    private static final Pose3d kBlueHubPose = new Pose3d(
+        Units.inchesToMeters(181.56), Units.inchesToMeters(158.32),
+        Units.inchesToMeters(72), new Rotation3d());
+    private static final Pose3d kRedHubPose = new Pose3d(
+        Units.inchesToMeters(181.56), Units.inchesToMeters(445.32),
+        Units.inchesToMeters(72), new Rotation3d());
 
-    static {
-      hubPose = new Pose3d(Units.inchesToMeters(181.56), Units.inchesToMeters(158.32), Units.inchesToMeters(72),
-          new Rotation3d());
-      if (alliance == Alliance.Red) {
-        hubPose = new Pose3d(Units.inchesToMeters(181.56), Units.inchesToMeters(445.32), Units.inchesToMeters(72),
-            new Rotation3d());
+    /** Always returns the correct hub pose for the current alliance. */
+    public static Pose3d getHubPose() {
+      var alliance = DriverStation.getAlliance();
+      if (alliance.isPresent() && alliance.get() == Alliance.Red) {
+        return kRedHubPose;
       }
+      return kBlueHubPose;
     }
   }
 

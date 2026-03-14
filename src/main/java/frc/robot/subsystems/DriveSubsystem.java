@@ -71,7 +71,7 @@ public class DriveSubsystem extends SubsystemBase {
       .getStructTopic("MyPose", Pose2d.struct).publish();
 
   // PID control for auto lock on
-  private PIDController mFeedbackController = new PIDController(1, 0, 0); // TUNE THIS.
+  public PIDController mFeedbackController = new PIDController(1, 0, 0); // TUNE THIS.
   private double omega;
 
   // Pose estimation
@@ -103,7 +103,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_gyro.enableOptionalMessages(true, true, true, false, false, false, false, false, false, false);
 
     mFeedbackController.enableContinuousInput(-Math.PI, Math.PI);
-    mFeedbackController.setTolerance(Math.toRadians(1.5));
+    mFeedbackController.setTolerance(Math.toRadians(5));
 
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
@@ -251,7 +251,7 @@ public class DriveSubsystem extends SubsystemBase {
    * Locks the rotation of the robot to face the hub.
    */
   public void lockRotationOnHub() {
-    Pose2d hubPose = FieldConstants.hubPose.toPose2d();
+    Pose2d hubPose = FieldConstants.getHubPose().toPose2d();
 
     // Rotate shooter's X/Y offset into field frame
     Translation2d shooterTranslation = new Translation2d(

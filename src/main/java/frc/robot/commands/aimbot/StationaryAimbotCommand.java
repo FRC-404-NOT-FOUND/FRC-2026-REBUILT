@@ -47,7 +47,7 @@ public class StationaryAimbotCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    Pose3d hubPose = FieldConstants.hubPose;
+    Pose3d hubPose = FieldConstants.getHubPose();
     Pose3d shooterPose = new Pose3d(drive.getPose()).plus(ShooterConstants.shooterOffset);
     Pose3d relativePose = hubPose.relativeTo(shooterPose);
 
@@ -55,7 +55,7 @@ public class StationaryAimbotCommand extends Command {
     double theta = ShooterConstants.theta; // theta of shooter wheel from horizontal, radians
     double rS = ShooterConstants.radius; // radius of shooter wheel
     double g = ShooterConstants.g; // acceleration of gravity
-    double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters(); // horizontal distance from robot to hub
+    double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters(); // horizontal distance
     double y = relativePose.getZ(); // vertical distance from robot to hub
     double k = 0.35; // efficiency, "fudge factor"
 
@@ -64,8 +64,13 @@ public class StationaryAimbotCommand extends Command {
 
     // Don't divide by zero
     if (Math.tan(theta) * x <= y) {
-        return;
+      shooter.stopShooter();
+      kicker.stopKicker();
+      spindexer.stopSpindexer();
+      SmartDashboard.putBoolean("Aimbot/Shot Possible", false);
+      return;
     }
+    SmartDashboard.putBoolean("Aimbot/Shot Possible", true);
 
     double vB = (x / Math.cos(theta)) * Math.sqrt(g / (2 * (Math.tan(theta) * x - y))); // required ball velocity
     double vS = vB / (k * rS); // required shooter angular velocity, rad/sec
@@ -73,7 +78,7 @@ public class StationaryAimbotCommand extends Command {
     shooter.setVelocity(vS);
 
     // Feed when at target velocity
-    if (shooter.shooterWithinTolerance(vS)) {
+    if (shooter.shooterWithinTolerance(vS) && drive.mFeedbackController.atSetpoint()) {
       kicker.startKicker();
       spindexer.startSpindexer();
     } else {
@@ -81,7 +86,7 @@ public class StationaryAimbotCommand extends Command {
       spindexer.stopSpindexer();
     }
 
-        SmartDashboard.putNumber("Aimbot/Horizontal Distance (m)", x);
+    SmartDashboard.putNumber("Aimbot/Horizontal Distance (m)", x);
     SmartDashboard.putNumber("Solved rad/s", vS);
   }
 

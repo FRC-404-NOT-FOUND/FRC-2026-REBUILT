@@ -24,6 +24,8 @@ public class Robot extends TimedRobot {
   private Vision vision;
   private final RobotContainer m_robotContainer;
 
+  private boolean hasAutoRun = false;
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any
@@ -76,11 +78,11 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
-    // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
+    flipGyro();
+    hasAutoRun = true;
   }
 
   /** This function is called periodically during autonomous. */
@@ -93,9 +95,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-
-    var alliance = DriverStation.getAlliance();
-    if (alliance.isPresent() && alliance.get() == Alliance.Red) {
+    if (!hasAutoRun) {
       flipGyro();
     }
   }
@@ -128,11 +128,12 @@ public class Robot extends TimedRobot {
   }
 
   private void flipGyro() {
+    var alliance = DriverStation.getAlliance();
+    boolean isRed = alliance.isPresent() && alliance.get() == Alliance.Red;
+    m_robotContainer.getDriveSubsystem().zeroHeading();
     m_robotContainer.getDriveSubsystem().resetPose(
         new Pose2d(
             m_robotContainer.getDriveSubsystem().getPose().getTranslation(),
-            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                ? Rotation2d.fromDegrees(180)
-                : new Rotation2d()));
+            isRed ? Rotation2d.fromDegrees(180) : new Rotation2d()));
   }
 }
