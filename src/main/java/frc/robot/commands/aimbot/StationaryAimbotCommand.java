@@ -12,6 +12,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class StationaryAimbotCommand extends Command {
@@ -56,7 +57,7 @@ public class StationaryAimbotCommand extends Command {
     double g = ShooterConstants.g; // acceleration of gravity
     double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters(); // horizontal distance from robot to hub
     double y = relativePose.getZ(); // vertical distance from robot to hub
-    double k = 1; // efficiency, "fudge factor"
+    double k = 0.35; // efficiency, "fudge factor"
 
     drive.lockRotationOnHub();
     drive.drive(0, 0, 0, true);
@@ -80,6 +81,8 @@ public class StationaryAimbotCommand extends Command {
       spindexer.stopSpindexer();
     }
 
+        SmartDashboard.putNumber("Aimbot/Horizontal Distance (m)", x);
+    SmartDashboard.putNumber("Solved rad/s", vS);
   }
 
   // Called once the command ends or is interrupted.

@@ -122,13 +122,13 @@ public final class Constants {
   }
 
   public static final class ShooterConstants {
-    public static final double theta = Math.toRadians(0); // angle of shooter off horizontal
+    public static final double theta = Math.toRadians(74); // angle of shooter off horizontal
     public static final double g = 9.81; // gravity
     public static final double radius = Units.inchesToMeters(2); // shooter wheel
 
     public static final int shooterCanID = 5;
 
-    public static final Transform3d shooterOffset = new Transform3d(new Translation3d(0, 0, 0),
+    public static final Transform3d shooterOffset = new Transform3d(new Translation3d(-0.254, 0.1778, 0.4318),
         new Rotation3d(0, 0, Math.PI / 2));
   }
 
@@ -157,7 +157,7 @@ public final class Constants {
     // Camera offsets from robot center
     public static final Transform3d kRobotToCamOne = new Transform3d(new Translation3d(-0.127, 0.3175, 0.51435),
         new Rotation3d(0, 0, Math.PI / 2));
-    public static final Transform3d kRobotToCamTwo = new Transform3d(new Translation3d(0, 0.0, 0),
+    public static final Transform3d kRobotToCamTwo = new Transform3d(new Translation3d(0.3175, -0.206375, 0.365125),
         new Rotation3d(0, 0, 0));
 
     // April tags

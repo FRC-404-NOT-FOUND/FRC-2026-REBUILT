@@ -91,9 +91,17 @@ public class RobotContainer {
 
     new JoystickButton(driverController, XboxController.Button.kA.value)
         .whileTrue(new StartEndCommand(
-            () -> spindexer.startSpindexer(),
-            () -> spindexer.stopSpindexer(),
-            spindexer));
+            () -> {
+              spindexer.startSpindexer();
+              kicker.reverseKicker();
+              intake.reverseIntake();
+            },
+            () -> {
+              spindexer.stopSpindexer();
+              kicker.stopKicker();
+              intake.stopIntake();
+            },
+            spindexer, kicker, intake));
 
     // Have to actually turn this into a command probably, need spindexer + kicker
     new JoystickButton(driverController, XboxController.Button.kB.value)
@@ -121,13 +129,21 @@ public class RobotContainer {
             () -> {
               if (intake.intakeIsSpinning) {
                 intake.stopIntake();
+                spindexer.stopSpindexer();
               } else {
                 intake.spinIntake();
+                spindexer.startSpindexer();
               }
             }, intake));
 
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
         .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
+
+    new Trigger(() -> driverController.getLeftTriggerAxis() > 0.5)
+        .whileTrue(new RunCommand(
+            () -> drive.lockRotationOnHub(),
+            drive)
+            .finallyDo(() -> drive.endLockOn()));
 
     // D-Pad Up → twoStageUp (runs while held)
     new Trigger(() -> driverController.getPOV() == 0)
@@ -164,7 +180,8 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    //return autoChooser.getSelected();
+    return null;
   }
 
   public DriveSubsystem getDriveSubsystem() {

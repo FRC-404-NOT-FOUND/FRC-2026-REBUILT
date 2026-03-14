@@ -23,7 +23,7 @@ public class SpindexerSubsystem extends SubsystemBase {
     motorConfig = new SparkMaxConfig();
 
     motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-    motorConfig.smartCurrentLimit(35);
+    motorConfig.smartCurrentLimit(40);
     motorConfig.inverted(true);
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }

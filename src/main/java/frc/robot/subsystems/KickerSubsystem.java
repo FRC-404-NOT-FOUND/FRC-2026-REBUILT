@@ -38,6 +38,10 @@ public class KickerSubsystem extends SubsystemBase {
     motor.set(0);
   }
 
+  public void reverseKicker() {
+    motor.set(-0.2);
+  }
+
   @Override
   public void periodic() {
     // Called once per scheduler run. Add telemetry or periodic checks here.

@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import org.photonvision.EstimatedRobotPose;
@@ -33,13 +32,11 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import com.studica.frc.Navx;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.PathPlannerConstants;
 import frc.robot.Constants.ShooterConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 
@@ -99,7 +96,7 @@ public class DriveSubsystem extends SubsystemBase {
         stdDevs);
   }
 
-  private final NetworkTable poseTable;
+  
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
@@ -141,7 +138,6 @@ public class DriveSubsystem extends SubsystemBase {
         },
         this // Reference to this subsystem to set requirements
     );
-    poseTable = NetworkTableInstance.getDefault().getTable("Pose");
   }
 
   @Override
@@ -155,11 +151,7 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-<<<<<<< HEAD
-   publisher.set(getPose());
-=======
     publisher.set(getPose());
->>>>>>> 7b00ef9aac53f5895b73a65c031bb2a42ced8358
   }
 
   /**
