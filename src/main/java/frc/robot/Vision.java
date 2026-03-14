@@ -27,9 +27,12 @@ public class Vision {
   private PhotonPoseEstimator poseEstimator2 = new PhotonPoseEstimator(VisionConstants.kTagLayout,
       VisionConstants.kRobotToCamTwo);
 
+  private boolean isDriverMode;
+
   /** Creates a new Vision object. */
   public Vision(DriveSubsystem drive) {
     this.drive = drive;
+    this.isDriverMode = false;
   }
 
   public void periodic() {
@@ -103,5 +106,9 @@ public class Vision {
         linearStdDev,
         angularStdDev
     });
+  }
+
+  public void toggleDriverCam() {
+    camera2.setDriverMode(!isDriverMode);
   }
 }

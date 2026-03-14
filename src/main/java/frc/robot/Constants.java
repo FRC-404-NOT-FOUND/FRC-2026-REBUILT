@@ -128,12 +128,13 @@ public final class Constants {
 
     public static final int shooterCanID = 5;
 
-    public static final Transform3d shooterOffset = new Transform3d(new Translation3d(-0.254, 0.1778, 0.4318),
+    public static final Transform3d shooterOffset = new Transform3d(new Translation3d(-0.254, -0.1778, 0.4318),
         new Rotation3d(0, 0, Math.PI / 2));
   }
 
   public static final class IntakeConstants {
     public static final int intakeCanID = 8;
+    public static final int vortexCanID = 13;
   }
 
   public static final class SpindexerConstants {
@@ -164,13 +165,13 @@ public final class Constants {
     public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     // Basic filtering thresholds
-    public static double maxAmbiguity = 0.3;
+    public static double maxAmbiguity = 0.15;
     public static double maxZError = 0.75;
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.02; // Meters
-    public static double angularStdDevBaseline = 0.06; // Radians
+    public static double linearStdDevBaseline = 0.3; // Meters
+    public static double angularStdDevBaseline = 0.9; // Radians
 
     // Standard deviation multipliers for each camera
     // (Adjust to trust some cameras more than others)
@@ -190,7 +191,7 @@ public final class Constants {
         Units.inchesToMeters(181.56), Units.inchesToMeters(158.32),
         Units.inchesToMeters(72), new Rotation3d());
     private static final Pose3d kRedHubPose = new Pose3d(
-        Units.inchesToMeters(181.56), Units.inchesToMeters(445.32),
+        Units.inchesToMeters(468.56), Units.inchesToMeters(158.32),
         Units.inchesToMeters(72), new Rotation3d());
 
     /** Always returns the correct hub pose for the current alliance. */

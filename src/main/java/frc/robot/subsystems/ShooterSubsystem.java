@@ -22,14 +22,14 @@ public class ShooterSubsystem extends SubsystemBase {
   // Empirically tuned velocities to use on the shooter at low, mid, and high
   // distances from the hub
   public static final int lowVel = 300;
-  public static final int midVel = 0;
+  public static final int midVel = 500;
   public static final int highVel = 0; // 80 percent
 
   private final SparkFlex motorOne;
   private final RelativeEncoder motorOneEncoder;
   private final SparkFlexConfig motorOneConfig;
 
-  private static final double shooterVelTolerance = 10; // plus or minus rad/sec
+  private static final double shooterVelTolerance = 30; // plus or minus rad/sec
 
   private double kS = 0.15; // these both still need to be tuned
   private double kV = 0.0169; // Approximation

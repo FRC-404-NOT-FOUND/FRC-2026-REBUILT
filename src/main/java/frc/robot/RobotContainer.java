@@ -40,6 +40,7 @@ public class RobotContainer {
   private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
   private final KickerSubsystem kicker = new KickerSubsystem();
   private final ClimberSubsystem climb = new ClimberSubsystem();
+  private final Vision vision = new Vision(drive);
 
   // The driver's controller
   XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -94,7 +95,7 @@ public class RobotContainer {
     new JoystickButton(driverController, XboxController.Button.kA.value)
         .whileTrue(new StartEndCommand(
             () -> {
-              spindexer.startSpindexer();
+              spindexer.reverseSpindexer();
               kicker.reverseKicker();
               intake.reverseIntake();
             },
@@ -121,10 +122,31 @@ public class RobotContainer {
                   spindexer.stopSpindexer();
                 }));
 
-    new JoystickButton(driverController, XboxController.Button.kStart.value)
+    new JoystickButton(driverController, XboxController.Button.kX.value)
+        .whileTrue(
+            new SequentialCommandGroup(
+                new RunCommand(() -> shooter.setVelocity(ShooterSubsystem.midVel), shooter)
+                    .withTimeout(1), // spin up shooter alone first
+                new RunCommand(() -> {
+                  shooter.setVelocity(ShooterSubsystem.midVel);
+                  kicker.startKicker();
+                  spindexer.startSpindexer();
+                }, shooter, kicker, spindexer)).finallyDo(() -> {
+                  shooter.stopShooter();
+                  kicker.stopKicker();
+                  spindexer.stopSpindexer();
+                }));
+
+    /*
+     * new JoystickButton(driverController, XboxController.Button.kStart.value)
+     * .onTrue(new InstantCommand(
+     * () -> drive.setX(),
+     * drive));
+     */
+
+    new JoystickButton(driverController, XboxController.Button.kBack.value)
         .onTrue(new InstantCommand(
-            () -> drive.setX(),
-            drive));
+            () -> vision.toggleDriverCam()));
 
     new JoystickButton(driverController, XboxController.Button.kRightBumper.value)
         .onTrue(new InstantCommand(
@@ -182,8 +204,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    //return autoChooser.getSelected();
-    return null;
+    return autoChooser.getSelected();
   }
 
   public DriveSubsystem getDriveSubsystem() {

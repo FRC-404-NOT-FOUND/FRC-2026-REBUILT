@@ -12,6 +12,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -41,29 +42,37 @@ public class StationaryAimbotCommand extends Command {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
   public void execute() {
     Pose3d hubPose = FieldConstants.getHubPose();
     Pose3d shooterPose = new Pose3d(drive.getPose()).plus(ShooterConstants.shooterOffset);
     Pose3d relativePose = hubPose.relativeTo(shooterPose);
 
-    // Projectile trajectory math
-    double theta = ShooterConstants.theta; // theta of shooter wheel from horizontal, radians
-    double rS = ShooterConstants.radius; // radius of shooter wheel
-    double g = ShooterConstants.g; // acceleration of gravity
-    double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters(); // horizontal distance
-    double y = relativePose.getZ(); // vertical distance from robot to hub
-    double k = 0.35; // efficiency, "fudge factor"
+    double theta = ShooterConstants.theta;
+    double rS = ShooterConstants.radius;
+    double g = ShooterConstants.g;
+    double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters();
+    double y = relativePose.getZ();
+    double k = 0.35;
+
+    // --- Logging: pose & geometry ---
+    SmartDashboard.putNumber("Aimbot/Shooter Pose X (m)", shooterPose.getX());
+    SmartDashboard.putNumber("Aimbot/Shooter Pose Y (m)", shooterPose.getY());
+    SmartDashboard.putNumber("Aimbot/Shooter Pose Z (m)", shooterPose.getZ());
+    SmartDashboard.putNumber("Aimbot/Hub Pose Z (m)", hubPose.getZ());
+    SmartDashboard.putNumber("Aimbot/Relative X (m)", relativePose.getX());
+    SmartDashboard.putNumber("Aimbot/Relative Y (m)", relativePose.getY());
+    SmartDashboard.putNumber("Aimbot/Vertical Distance Y (m)", y);
+    SmartDashboard.putNumber("Aimbot/Horizontal Distance X (m)", x);
+    SmartDashboard.putNumber("Aimbot/Fudge Offset (m)", StationaryAimbotCommandData.getOffsetMeters());
 
     drive.lockRotationOnHub();
     drive.drive(0, 0, 0, true);
 
-    // Don't divide by zero
-    if (Math.tan(theta) * x <= y) {
+    double tanThetaX = Math.tan(theta) * x;
+    SmartDashboard.putNumber("Aimbot/tan(theta)*x", tanThetaX);
+    SmartDashboard.putNumber("Aimbot/tan(theta)*x - y (denominator term)", tanThetaX - y);
+
+    if (tanThetaX <= y) {
       shooter.stopShooter();
       kicker.stopKicker();
       spindexer.stopSpindexer();
@@ -72,22 +81,32 @@ public class StationaryAimbotCommand extends Command {
     }
     SmartDashboard.putBoolean("Aimbot/Shot Possible", true);
 
-    double vB = (x / Math.cos(theta)) * Math.sqrt(g / (2 * (Math.tan(theta) * x - y))); // required ball velocity
-    double vS = vB / (k * rS); // required shooter angular velocity, rad/sec
+    double vB = (x / Math.cos(theta)) * Math.sqrt(g / (2 * (tanThetaX - y)));
+    double vS = vB / (k * rS);
+
+    // --- Logging: solver outputs ---
+    SmartDashboard.putNumber("Aimbot/Required Ball Velocity (m-s)", vB);
+    SmartDashboard.putNumber("Aimbot/Required Shooter (rad-s)", vS);
+    SmartDashboard.putNumber("Aimbot/Required Shooter (RPM)", vS * 60 / (2 * Math.PI));
+    SmartDashboard.putNumber("Aimbot/k", k);
+    SmartDashboard.putNumber("Aimbot/Wheel Radius (m)", rS);
+    SmartDashboard.putString("Aimbot/Alliance",
+        DriverStation.getAlliance().map(Object::toString).orElse("UNKNOWN"));
 
     shooter.setVelocity(vS);
 
-    // Feed when at target velocity
+    SmartDashboard.putBoolean("Aimbot/Shooter At Speed", shooter.shooterWithinTolerance(vS));
+    SmartDashboard.putBoolean("Aimbot/Drive At Heading", drive.mFeedbackController.atSetpoint());
+
     if (shooter.shooterWithinTolerance(vS) && drive.mFeedbackController.atSetpoint()) {
       kicker.startKicker();
       spindexer.startSpindexer();
+      SmartDashboard.putBoolean("Aimbot/Feeding", true);
     } else {
       kicker.stopKicker();
       spindexer.stopSpindexer();
+      SmartDashboard.putBoolean("Aimbot/Feeding", false);
     }
-
-    SmartDashboard.putNumber("Aimbot/Horizontal Distance (m)", x);
-    SmartDashboard.putNumber("Solved rad/s", vS);
   }
 
   // Called once the command ends or is interrupted.

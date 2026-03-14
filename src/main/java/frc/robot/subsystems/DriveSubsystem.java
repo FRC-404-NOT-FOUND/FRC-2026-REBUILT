@@ -96,8 +96,6 @@ public class DriveSubsystem extends SubsystemBase {
         stdDevs);
   }
 
-  
-
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
     m_gyro.enableOptionalMessages(true, true, true, false, false, false, false, false, false, false);
@@ -120,7 +118,7 @@ public class DriveSubsystem extends SubsystemBase {
                                                                     // individual module feedforwards
         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic
                                         // drive trains
-            new PIDConstants(1.0, 0.0, 0.0), // Translation PID constants
+            new PIDConstants(1.475, 0.0, 0.0), // Translation PID constants
             new PIDConstants(1.0, 0.0, 0.0) // Rotation PID constants
         ),
         config, // The robot configuration
@@ -170,7 +168,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetPose(Pose2d pose) {
     mPoseEstimator.resetPosition(
-        getHeading(),
+        Rotation2d.fromDegrees(gyroAngle),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
