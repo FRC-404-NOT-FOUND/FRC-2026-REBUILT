@@ -169,28 +169,28 @@ public class RobotContainer {
             drive)
             .finallyDo(() -> drive.endLockOn()));
 
-    // D-Pad Up → twoStageUp (runs while held)
+    // D-Pad Up -> twoStageUp (runs while held)
     new Trigger(() -> driverController.getPOV() == 0)
         .whileTrue(new StartEndCommand(
             () -> climb.twoStageSet(0.5),
             () -> climb.twoStageSet(0),
             climb));
 
-    // D-Pad Down → twoStageDown (runs while held)
+    // D-Pad Down -> twoStageDown (runs while held)
     new Trigger(() -> driverController.getPOV() == 180)
         .whileTrue(new StartEndCommand(
             () -> climb.twoStageSet(-0.5),
             () -> climb.twoStageSet(0),
             climb));
 
-    // D-Pad Right → oneStageUp (runs while held)
+    // D-Pad Right -> oneStageUp (runs while held)
     new Trigger(() -> driverController.getPOV() == 90)
         .whileTrue(new StartEndCommand(
             () -> climb.oneStageSet(0.5),
             () -> climb.oneStageSet(0),
             climb));
 
-    // D-Pad Left → oneStageDown (runs while held)
+    // D-Pad Left -> oneStageDown (runs while held)
     new Trigger(() -> driverController.getPOV() == 270)
         .whileTrue(new StartEndCommand(
             () -> climb.oneStageSet(-0.5),
