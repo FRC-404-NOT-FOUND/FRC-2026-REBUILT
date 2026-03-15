@@ -186,7 +186,7 @@ public final class Constants {
   }
 
   public static final class FieldConstants {
-    // Hub positions hardcoded — do NOT read alliance in a static block
+    // Hub positions hardcoded - do NOT read alliance in a static block
     private static final Pose3d kBlueHubPose = new Pose3d(
         Units.inchesToMeters(181.56), Units.inchesToMeters(158.32),
         Units.inchesToMeters(72), new Rotation3d());
