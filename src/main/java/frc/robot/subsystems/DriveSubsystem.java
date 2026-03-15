@@ -91,10 +91,14 @@ public class DriveSubsystem extends SubsystemBase {
    * @param visionPose Estimated pose from april tag.
    * @param stdDevs    How much we trust the given pose.
    */
-  public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> stdDevs) {
-    mPoseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds,
-        stdDevs);
-  }
+public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> stdDevs) {
+    Pose2d pose = visionPose.estimatedPose.toPose2d();
+    if (pose.getX() < 0 || pose.getX() > VisionConstants.kTagLayout.getFieldLength()
+     || pose.getY() < 0 || pose.getY() > VisionConstants.kTagLayout.getFieldWidth()) {
+        return;
+    }
+    mPoseEstimator.addVisionMeasurement(pose, visionPose.timestampSeconds, stdDevs);
+}
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
