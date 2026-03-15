@@ -34,8 +34,8 @@ public class IntakeSubsystem extends SubsystemBase {
     vortexConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
     motorConfig.inverted(true);
     vortexConfig.inverted(true); // placeholder
-    motorConfig.smartCurrentLimit(40);
-    vortexConfig.smartCurrentLimit(40);
+    motorConfig.smartCurrentLimit(35);
+    vortexConfig.smartCurrentLimit(35);
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     vortexMotor.configure(vortexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }

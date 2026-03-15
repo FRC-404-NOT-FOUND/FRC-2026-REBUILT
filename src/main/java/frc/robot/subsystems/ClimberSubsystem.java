@@ -27,7 +27,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
     motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
     motorConfig.inverted(false);
-    motorConfig.smartCurrentLimit(40);
+    motorConfig.smartCurrentLimit(5);
     motorConfig.encoder.positionConversionFactor(1); // Motor rotations to meters
 
     oneStageMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

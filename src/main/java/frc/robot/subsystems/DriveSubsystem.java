@@ -32,6 +32,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import com.studica.frc.Navx;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
@@ -72,7 +73,7 @@ public class DriveSubsystem extends SubsystemBase {
       .getStructTopic("MyPose", Pose2d.struct).publish();
 
   // PID control for auto lock on
-  public PIDController mFeedbackController = new PIDController(1, 0, 0); // TUNE THIS.
+  public PIDController mFeedbackController = new PIDController(1.2, 0, 0); // TUNE THIS.
   private double omega;
 
   // Pose estimation
@@ -124,7 +125,7 @@ public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> s
         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic
                                         // drive trains
             new PIDConstants(1.475, 0.0, 0.0), // Translation PID constants
-            new PIDConstants(1.0, 0.0, 0.0) // Rotation PID constants
+            new PIDConstants(1.1, 0.0, 0.0) // Rotation PID constants
         ),
         config, // The robot configuration
         () -> {
@@ -155,6 +156,7 @@ public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> s
             m_rearRight.getPosition()
         });
     publisher.set(getPose());
+    SmartDashboard.putNumber("Gyro raw: ", gyroAngle);
   }
 
   /**

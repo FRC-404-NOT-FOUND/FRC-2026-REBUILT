@@ -24,7 +24,7 @@ public class KickerSubsystem extends SubsystemBase {
 
     motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
     motorConfig.inverted(false);
-    motorConfig.smartCurrentLimit(40);
+    motorConfig.smartCurrentLimit(35);
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 

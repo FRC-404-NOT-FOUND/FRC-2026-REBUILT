@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -42,6 +43,10 @@ public class RobotContainer {
   private final ClimberSubsystem climb = new ClimberSubsystem();
   private final Vision vision = new Vision(drive);
 
+  private final SlewRateLimiter xSlewRateLimiter;
+  private final SlewRateLimiter ySlewRateLimiter;
+  private final SlewRateLimiter rSlewRateLimiter;
+
   // The driver's controller
   XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -55,7 +60,7 @@ public class RobotContainer {
     // PathPlanner commands
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
-    NamedCommands.registerCommand("Stationary Aimbot", new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
+    NamedCommands.registerCommand("Stationary Aimbot", new StationaryAimbotCommand(drive, shooter, kicker, spindexer).repeatedly());
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -63,15 +68,20 @@ public class RobotContainer {
     // Configure the button bindings
     configureButtonBindings();
 
+    // Create slew rate limiters to prevent stuttering
+    xSlewRateLimiter = new SlewRateLimiter(1.8); // Rate limit is in seconds to max
+    ySlewRateLimiter = new SlewRateLimiter(1.8);
+    rSlewRateLimiter = new SlewRateLimiter(2.5);
+
     // Configure default commands
     drive.setDefaultCommand(
         // The left stick controls translation of the robot.
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> drive.drive(
-                -MathUtil.applyDeadband(driverController.getLeftY(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(driverController.getLeftX(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(driverController.getRightX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(xSlewRateLimiter.calculate(driverController.getLeftY()), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(ySlewRateLimiter.calculate(driverController.getLeftX()), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(rSlewRateLimiter.calculate(driverController.getRightX()), OIConstants.kDriveDeadband),
                 true),
             drive));
   }

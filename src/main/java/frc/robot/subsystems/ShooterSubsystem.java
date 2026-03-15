@@ -51,7 +51,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     motorOneConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
     motorOneConfig.inverted(false);
-    motorOneConfig.smartCurrentLimit(60);
+    motorOneConfig.smartCurrentLimit(50);
     motorOneConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gear box, rad/sec
     motorOne.configure(motorOneConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 

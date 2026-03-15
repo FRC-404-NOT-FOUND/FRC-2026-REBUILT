@@ -52,7 +52,7 @@ public class StationaryAimbotCommand extends Command {
     double g = ShooterConstants.g;
     double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters();
     double y = relativePose.getZ();
-    double k = 0.35;
+    double k = 0.3;
 
     // --- Logging: pose & geometry ---
     SmartDashboard.putNumber("Aimbot/Shooter Pose X (m)", shooterPose.getX());
@@ -69,8 +69,6 @@ public class StationaryAimbotCommand extends Command {
     drive.drive(0, 0, 0, true);
 
     double tanThetaX = Math.tan(theta) * x;
-    SmartDashboard.putNumber("Aimbot/tan(theta)*x", tanThetaX);
-    SmartDashboard.putNumber("Aimbot/tan(theta)*x - y (denominator term)", tanThetaX - y);
 
     if (tanThetaX <= y) {
       shooter.stopShooter();
@@ -88,8 +86,6 @@ public class StationaryAimbotCommand extends Command {
     SmartDashboard.putNumber("Aimbot/Required Ball Velocity (m-s)", vB);
     SmartDashboard.putNumber("Aimbot/Required Shooter (rad-s)", vS);
     SmartDashboard.putNumber("Aimbot/Required Shooter (RPM)", vS * 60 / (2 * Math.PI));
-    SmartDashboard.putNumber("Aimbot/k", k);
-    SmartDashboard.putNumber("Aimbot/Wheel Radius (m)", rS);
     SmartDashboard.putString("Aimbot/Alliance",
         DriverStation.getAlliance().map(Object::toString).orElse("UNKNOWN"));
 
@@ -98,7 +94,7 @@ public class StationaryAimbotCommand extends Command {
     SmartDashboard.putBoolean("Aimbot/Shooter At Speed", shooter.shooterWithinTolerance(vS));
     SmartDashboard.putBoolean("Aimbot/Drive At Heading", drive.mFeedbackController.atSetpoint());
 
-    if (shooter.shooterWithinTolerance(vS) && drive.mFeedbackController.atSetpoint()) {
+    if (shooter.shooterWithinTolerance(vS)) {
       kicker.startKicker();
       spindexer.startSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", true);

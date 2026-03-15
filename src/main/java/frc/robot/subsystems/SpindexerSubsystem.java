@@ -30,12 +30,12 @@ public class SpindexerSubsystem extends SubsystemBase {
 
   /** Spin the spindexer. */
   public void startSpindexer() {
-    motor.set(0.3);
+    motor.set(0.45);
   }
 
   /** Reverse spindexer for unjamming fuel. */
   public void reverseSpindexer() {
-    motor.set(-0.3);
+    motor.set(-0.45);
   }
 
   /** Stop spinning the spindexer. */

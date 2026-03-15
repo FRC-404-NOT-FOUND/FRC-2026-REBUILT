@@ -3,10 +3,11 @@
   "robotLength": 0.8382,
   "holonomicMode": true,
   "pathFolders": [
+    "Chud autos",
     "Goated Middle",
     "Joel's Idea",
-    "Straight to middle right",
-    "Straight to middle left"
+    "Straight to middle left",
+    "Straight to middle right"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,
