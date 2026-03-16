@@ -4,8 +4,13 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -26,6 +31,14 @@ public class Robot extends TimedRobot {
 
   private boolean hasAutoRun = false;
 
+  private final StructArrayPublisher<Pose2d> actualPathPublisher = NetworkTableInstance.getDefault()
+      .getStructArrayTopic("Actual auto path", Pose2d.struct).publish();
+
+  private final StructArrayPublisher<Pose2d> desiredPathPublisher = NetworkTableInstance.getDefault()
+      .getStructArrayTopic("Desired auto path", Pose2d.struct).publish();
+
+  private List<Pose2d> actualPath = new ArrayList<>();
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any
@@ -36,7 +49,7 @@ public class Robot extends TimedRobot {
     // and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
-    vision = new Vision(m_robotContainer.getDriveSubsystem());
+    vision = m_robotContainer.getVision();
   }
 
   /**
@@ -77,9 +90,11 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    actualPath.clear();
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
+      desiredPathPublisher.set(m_robotContainer.getAutoPoses());
     }
     flipGyro();
     hasAutoRun = true;
@@ -88,6 +103,12 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
+    actualPath.add(m_robotContainer.getDriveSubsystem().getPose());
+  }
+
+  @Override
+  public void autonomousExit() {
+    actualPathPublisher.set(actualPath.toArray(new Pose2d[0]));
   }
 
   @Override

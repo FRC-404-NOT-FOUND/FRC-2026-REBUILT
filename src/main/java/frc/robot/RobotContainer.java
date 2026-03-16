@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,8 +25,13 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import java.io.IOException;
+import org.json.simple.parser.ParseException;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -60,7 +66,8 @@ public class RobotContainer {
     // PathPlanner commands
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
-    NamedCommands.registerCommand("Stationary Aimbot", new StationaryAimbotCommand(drive, shooter, kicker, spindexer).repeatedly());
+    NamedCommands.registerCommand("Stationary Aimbot",
+        new StationaryAimbotCommand(drive, shooter, kicker, spindexer).repeatedly());
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -79,9 +86,12 @@ public class RobotContainer {
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> drive.drive(
-                -MathUtil.applyDeadband(xSlewRateLimiter.calculate(driverController.getLeftY()), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(ySlewRateLimiter.calculate(driverController.getLeftX()), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(rSlewRateLimiter.calculate(driverController.getRightX()), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(xSlewRateLimiter.calculate(driverController.getLeftY()),
+                    OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(ySlewRateLimiter.calculate(driverController.getLeftX()),
+                    OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(rSlewRateLimiter.calculate(driverController.getRightX()),
+                    OIConstants.kDriveDeadband),
                 true),
             drive));
   }
@@ -217,7 +227,23 @@ public class RobotContainer {
     return autoChooser.getSelected();
   }
 
+  public Pose2d[] getAutoPoses() {
+    try {
+      return PathPlannerAuto.getPathGroupFromAutoFile(autoChooser.getSelected().getName())
+          .stream()
+          .flatMap(path -> path.getPathPoses().stream())
+          .toArray(Pose2d[]::new);
+    } catch (IOException | ParseException e) {
+      e.printStackTrace();
+      return new Pose2d[0];
+    }
+  }
+
   public DriveSubsystem getDriveSubsystem() {
     return drive;
+  }
+
+  public Vision getVision() {
+    return vision;
   }
 }
