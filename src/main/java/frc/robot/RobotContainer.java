@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.aimbot.StationaryAimbotCommand;
-import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
@@ -46,7 +45,6 @@ public class RobotContainer {
   private final IntakeSubsystem intake = new IntakeSubsystem();
   private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
   private final KickerSubsystem kicker = new KickerSubsystem();
-  private final ClimberSubsystem climb = new ClimberSubsystem();
   private final Vision vision = new Vision(drive);
 
   private final SlewRateLimiter xSlewRateLimiter;
@@ -67,7 +65,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
     NamedCommands.registerCommand("Stationary Aimbot",
-        new StationaryAimbotCommand(drive, shooter, kicker, spindexer).repeatedly());
+        new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -182,40 +180,6 @@ public class RobotContainer {
 
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
         .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
-
-    new Trigger(() -> driverController.getLeftTriggerAxis() > 0.5)
-        .whileTrue(new RunCommand(
-            () -> drive.lockRotationOnHub(),
-            drive)
-            .finallyDo(() -> drive.endLockOn()));
-
-    // D-Pad Up -> twoStageUp (runs while held)
-    new Trigger(() -> driverController.getPOV() == 0)
-        .whileTrue(new StartEndCommand(
-            () -> climb.twoStageSet(0.5),
-            () -> climb.twoStageSet(0),
-            climb));
-
-    // D-Pad Down -> twoStageDown (runs while held)
-    new Trigger(() -> driverController.getPOV() == 180)
-        .whileTrue(new StartEndCommand(
-            () -> climb.twoStageSet(-0.5),
-            () -> climb.twoStageSet(0),
-            climb));
-
-    // D-Pad Right -> oneStageUp (runs while held)
-    new Trigger(() -> driverController.getPOV() == 90)
-        .whileTrue(new StartEndCommand(
-            () -> climb.oneStageSet(0.5),
-            () -> climb.oneStageSet(0),
-            climb));
-
-    // D-Pad Left -> oneStageDown (runs while held)
-    new Trigger(() -> driverController.getPOV() == 270)
-        .whileTrue(new StartEndCommand(
-            () -> climb.oneStageSet(-0.5),
-            () -> climb.oneStageSet(0),
-            climb));
   }
 
   /**

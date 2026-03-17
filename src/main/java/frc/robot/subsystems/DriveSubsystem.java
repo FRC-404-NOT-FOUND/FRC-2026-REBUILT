@@ -95,10 +95,24 @@ public class DriveSubsystem extends SubsystemBase {
    */
 public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> stdDevs) {
     Pose2d pose = visionPose.estimatedPose.toPose2d();
+
+    // Outside field
     if (pose.getX() < 0 || pose.getX() > VisionConstants.kTagLayout.getFieldLength()
      || pose.getY() < 0 || pose.getY() > VisionConstants.kTagLayout.getFieldWidth()) {
         return;
     }
+
+    // Pose is in air or under ground
+    if (Math.abs(visionPose.estimatedPose.getZ()) > VisionConstants.maxZError) {
+        return;
+    }
+
+    // Outside max ambiguity
+    if (visionPose.targetsUsed.size() == 1
+     && visionPose.targetsUsed.get(0).getPoseAmbiguity() > VisionConstants.maxAmbiguity) {
+        return;
+    }
+
     mPoseEstimator.addVisionMeasurement(pose, visionPose.timestampSeconds, stdDevs);
 }
 
@@ -174,8 +188,9 @@ public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> s
    * @param pose The pose to set.
    */
   public void resetPose(Pose2d pose) {
+    double currentAngle = m_gyro.getYaw().in(Degrees) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
     mPoseEstimator.resetPosition(
-        Rotation2d.fromDegrees(gyroAngle),
+        Rotation2d.fromDegrees(currentAngle),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),

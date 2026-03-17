@@ -90,13 +90,13 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    flipGyro();
     actualPath.clear();
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
       desiredPathPublisher.set(m_robotContainer.getAutoPoses());
     }
-    flipGyro();
     hasAutoRun = true;
   }
 
