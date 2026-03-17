@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.DriveSubsystem;
@@ -13,8 +15,11 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 
 public class Vision {
   private final DriveSubsystem drive;
@@ -26,6 +31,13 @@ public class Vision {
       VisionConstants.kRobotToCamOne);
   private PhotonPoseEstimator poseEstimator2 = new PhotonPoseEstimator(VisionConstants.kTagLayout,
       VisionConstants.kRobotToCamTwo);
+
+  private final StructArrayPublisher<Pose3d> cam1SeenTags = NetworkTableInstance.getDefault()
+      .getStructArrayTopic("Vision/Cam1DetectedTags", Pose3d.struct)
+      .publish();
+  private final StructArrayPublisher<Pose3d> cam2SeenTags = NetworkTableInstance.getDefault()
+      .getStructArrayTopic("Vision/Cam2DetectedTags", Pose3d.struct)
+      .publish();
 
   private boolean isDriverMode;
 
@@ -40,6 +52,9 @@ public class Vision {
     var result1 = camera1.getAllUnreadResults();
     var result2 = camera2.getAllUnreadResults();
 
+    List<Pose3d> cam1Poses = new ArrayList<>();
+    List<Pose3d> cam2Poses = new ArrayList<>();
+
     /*
      * Go through all tags red from PhotonVision per camera,
      * estimate posistion and add it to kalman filter in drive.
@@ -50,12 +65,13 @@ public class Vision {
       if (estimation1.isEmpty()) {
         estimation1 = poseEstimator1.estimateLowestAmbiguityPose(result1.get(i));
       }
-
       if (estimation1.isPresent()) {
         drive.addVisionMeasurement(estimation1.get(), calculateStdDevs(result1.get(i), 0));
       }
-    }
 
+      result1.get(i).getTargets().forEach(target -> VisionConstants.kTagLayout.getTagPose(target.getFiducialId())
+          .ifPresent(cam1Poses::add));
+    }
     Optional<EstimatedRobotPose> estimation2;
     for (int i = 0; i < result2.size(); i++) {
       estimation2 = poseEstimator2.estimateCoprocMultiTagPose(result2.get(i));
@@ -66,7 +82,11 @@ public class Vision {
       if (estimation2.isPresent()) {
         drive.addVisionMeasurement(estimation2.get(), calculateStdDevs(result2.get(i), 1));
       }
+      result2.get(i).getTargets().forEach(target -> VisionConstants.kTagLayout.getTagPose(target.getFiducialId())
+          .ifPresent(cam2Poses::add));
     }
+    cam1SeenTags.set(cam1Poses.toArray(new Pose3d[0]));
+    cam2SeenTags.set(cam2Poses.toArray(new Pose3d[0]));
   }
 
   // Largely taken from the AdvantageKit template, props to 6328
