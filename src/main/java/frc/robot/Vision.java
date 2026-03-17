@@ -99,6 +99,12 @@ public class Vision {
   private Matrix<N3, N1> calculateStdDevs(PhotonPipelineResult result, int cameraIndex) {
     int tagCount = result.getTargets().size();
 
+    if (tagCount == 0) {
+      return new Matrix<>(Nat.N3(), Nat.N1(), new double[] {
+          Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE
+      });
+    }
+
     double avgDistance = result.getTargets().stream()
         .mapToDouble(t -> t.getBestCameraToTarget().getTranslation().getNorm())
         .average()
