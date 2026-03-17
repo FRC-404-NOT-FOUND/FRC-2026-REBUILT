@@ -91,8 +91,8 @@ public class Vision {
 
     // If multi-tag solve, trust it more
     if (tagCount > 1) {
-      linearStdDev *= VisionConstants.linearStdDevMegatag2Factor;
-      angularStdDev *= VisionConstants.angularStdDevMegatag2Factor;
+      linearStdDev *= VisionConstants.linearStdDevMultitagFactor;
+      angularStdDev *= VisionConstants.angularStdDevMultitagFactor;
     }
 
     // Per-camera trust factor
@@ -109,6 +109,7 @@ public class Vision {
   }
 
   public void toggleDriverCam() {
-    camera2.setDriverMode(!isDriverMode);
+    isDriverMode = !isDriverMode;
+    camera2.setDriverMode(isDriverMode);
   }
 }
