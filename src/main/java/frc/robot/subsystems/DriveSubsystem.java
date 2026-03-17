@@ -10,6 +10,10 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.photonvision.EstimatedRobotPose;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -40,6 +44,7 @@ import frc.robot.Constants.PathPlannerConstants;
 import frc.robot.Constants.ShooterConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -69,8 +74,14 @@ public class DriveSubsystem extends SubsystemBase {
   private double gyroAngle;
 
   // Pose logging
-  StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
-      .getStructTopic("MyPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> robotPose = NetworkTableInstance.getDefault()
+      .getStructTopic("Actual pose", Pose2d.struct).publish();
+
+  private final StructArrayPublisher<Pose2d> rejectedPoses = NetworkTableInstance.getDefault()
+      .getStructArrayTopic("Vision/RejectedPoses", Pose2d.struct)
+      .publish();
+
+  private final List<Pose2d> rejectedPoseBuffer = new ArrayList<>();
 
   // PID control for auto lock on
   public PIDController mFeedbackController = new PIDController(1.2, 0, 0); // TUNE THIS.
@@ -93,28 +104,31 @@ public class DriveSubsystem extends SubsystemBase {
    * @param visionPose Estimated pose from april tag.
    * @param stdDevs    How much we trust the given pose.
    */
-public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> stdDevs) {
+  public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> stdDevs) {
     Pose2d pose = visionPose.estimatedPose.toPose2d();
 
     // Outside field
     if (pose.getX() < 0 || pose.getX() > VisionConstants.kTagLayout.getFieldLength()
-     || pose.getY() < 0 || pose.getY() > VisionConstants.kTagLayout.getFieldWidth()) {
-        return;
+        || pose.getY() < 0 || pose.getY() > VisionConstants.kTagLayout.getFieldWidth()) {
+      rejectedPoseBuffer.add(pose);
+      return;
     }
 
     // Pose is in air or under ground
     if (Math.abs(visionPose.estimatedPose.getZ()) > VisionConstants.maxZError) {
-        return;
+      rejectedPoseBuffer.add(pose);
+      return;
     }
 
     // Outside max ambiguity
     if (visionPose.targetsUsed.size() == 1
-     && visionPose.targetsUsed.get(0).getPoseAmbiguity() > VisionConstants.maxAmbiguity) {
-        return;
+        && visionPose.targetsUsed.get(0).getPoseAmbiguity() > VisionConstants.maxAmbiguity) {
+      rejectedPoseBuffer.add(pose);
+      return;
     }
 
     mPoseEstimator.addVisionMeasurement(pose, visionPose.timestampSeconds, stdDevs);
-}
+  }
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
@@ -169,8 +183,10 @@ public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> s
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-    publisher.set(getPose());
+    robotPose.set(getPose());
     SmartDashboard.putNumber("Gyro raw: ", gyroAngle);
+    rejectedPoses.set(rejectedPoseBuffer.toArray(new Pose2d[0]));
+    rejectedPoseBuffer.clear();
   }
 
   /**

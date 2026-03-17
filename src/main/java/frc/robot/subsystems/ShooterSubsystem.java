@@ -13,17 +13,18 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class ShooterSubsystem extends SubsystemBase {
-  // Empirically tuned velocities to use on the shooter at low, mid, and high
+  // Empirically tuned velocities to use on the shooter at low and mid
   // distances from the hub
   public static final int lowVel = 300;
   public static final int midVel = 500;
-  public static final int highVel = 0; // 80 percent
 
   private final SparkFlex motorOne;
   private final RelativeEncoder motorOneEncoder;
@@ -33,11 +34,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private double kS = 0.15; // these both still need to be tuned
   private double kV = 0.0169; // Approximation
-  private SimpleMotorFeedforward shooter_feedforward = new SimpleMotorFeedforward(kS, kV);
+  private SimpleMotorFeedforward shooterFeedforward = new SimpleMotorFeedforward(kS, kV);
+
+  private double kP = 0.1;
+  private PIDController shooterFeedback = new PIDController(kP, 0, 0);
 
   private double kMaxVelocity = 710;
   private double kMaxAcceleration = 710;
-  private TrapezoidProfile shooter_profile = new TrapezoidProfile(
+  private TrapezoidProfile shooterProfile = new TrapezoidProfile(
       new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration));
   private TrapezoidProfile.State shooterSetpoint = new TrapezoidProfile.State(0.0, 0.0);
 
@@ -67,12 +71,14 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setVelocity(double radPerSec) {
     double currentVelocity = motorOneEncoder.getVelocity();
 
-    shooterSetpoint = shooter_profile.calculate(0.02,
+    shooterSetpoint = shooterProfile.calculate(0.02,
         shooterSetpoint,
         new TrapezoidProfile.State(radPerSec, 0));
     double nextVelocity = shooterSetpoint.position;
 
-    motorOne.setVoltage(shooter_feedforward.calculateWithVelocities(currentVelocity, nextVelocity));
+    double voltage = shooterFeedforward.calculateWithVelocities(currentVelocity, nextVelocity)
+        + shooterFeedback.calculate(currentVelocity, nextVelocity);
+    motorOne.setVoltage(voltage);
   }
 
   /** Stop spinning the shooter wheel. */
