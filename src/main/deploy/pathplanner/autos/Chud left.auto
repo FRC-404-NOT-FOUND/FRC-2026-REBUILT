@@ -13,7 +13,32 @@
         {
           "type": "named",
           "data": {
-            "name": "Stationary Aimbot"
+            "name": "Start Intake"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Stationary Aimbot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 7.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Chud left pt 2"
           }
         }
       ]

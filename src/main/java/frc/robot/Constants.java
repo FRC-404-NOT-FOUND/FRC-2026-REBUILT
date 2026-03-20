@@ -145,14 +145,9 @@ public final class Constants {
     public static final int kickerCanID = 6;
   }
 
-  public static final class ClimberConstants {
-    public static final int oneStageCanID = 10;
-    public static final int twoStageCanID = 9;
-  }
-
   public static final class VisionConstants {
     // Camera names from PV
-    public static final String cam1 = "ClimbShoot Camera";
+    public static final String cam1 = "Shoot Camera";
     public static final String cam2 = "Intake Camera";
 
     // Camera offsets from robot center

@@ -51,6 +51,8 @@ public class RobotContainer {
   private final SlewRateLimiter ySlewRateLimiter;
   private final SlewRateLimiter rSlewRateLimiter;
 
+  private final double a;
+
   // The driver's controller
   XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -78,17 +80,19 @@ public class RobotContainer {
     ySlewRateLimiter = new SlewRateLimiter(1.8);
     rSlewRateLimiter = new SlewRateLimiter(2.5);
 
+    a = 1.0;
+
     // Configure default commands
     drive.setDefaultCommand(
         // The left stick controls translation of the robot.
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> drive.drive(
-                -MathUtil.applyDeadband(xSlewRateLimiter.calculate(driverController.getLeftY()),
+                -MathUtil.applyDeadband(xSlewRateLimiter.calculate(a * Math.pow(driverController.getLeftY(), 3) + (1 - a) * driverController.getLeftY()),
                     OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(ySlewRateLimiter.calculate(driverController.getLeftX()),
+                -MathUtil.applyDeadband(ySlewRateLimiter.calculate(a * Math.pow(driverController.getLeftX(), 3) + (1 - a) * driverController.getLeftX()),
                     OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(rSlewRateLimiter.calculate(driverController.getRightX()),
+                -MathUtil.applyDeadband(rSlewRateLimiter.calculate(a * Math.pow(driverController.getRightX(), 3) + (1 - a) * driverController.getRightX()),
                     OIConstants.kDriveDeadband),
                 true),
             drive));
@@ -172,9 +176,11 @@ public class RobotContainer {
               if (intake.intakeIsSpinning) {
                 intake.stopIntake();
                 spindexer.stopSpindexer();
+                kicker.stopKicker();
               } else {
                 intake.spinIntake();
                 spindexer.startSpindexer();
+                kicker.reverseKicker();
               }
             }, intake, spindexer));
 

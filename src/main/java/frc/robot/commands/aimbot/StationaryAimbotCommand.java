@@ -40,7 +40,12 @@ public class StationaryAimbotCommand extends Command {
     addRequirements(drive, shooter, kicker, spindexer);
   }
 
-  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {
+    kicker.reverseKicker();
+  }
+
+
   @Override
   public void execute() {
     Pose3d hubPose = FieldConstants.getHubPose();
@@ -52,7 +57,7 @@ public class StationaryAimbotCommand extends Command {
     double g = ShooterConstants.g;
     double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters();
     double y = relativePose.getZ();
-    double k = 0.3;
+    double k = 0.225;
 
     // --- Logging: pose & geometry ---
     SmartDashboard.putNumber("Aimbot/Shooter Pose X (m)", shooterPose.getX());
@@ -99,8 +104,8 @@ public class StationaryAimbotCommand extends Command {
       spindexer.startSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", true);
     } else {
-      kicker.stopKicker();
-      spindexer.stopSpindexer();
+      //kicker.stopKicker();
+      //spindexer.stopSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", false);
     }
   }

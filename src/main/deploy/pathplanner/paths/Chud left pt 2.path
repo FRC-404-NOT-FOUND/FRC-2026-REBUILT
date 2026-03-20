@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5,
-        "y": 4.0
+        "x": 2.668,
+        "y": 5.322
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.865692092860421,
-        "y": 4.314546169678757
+        "x": 2.3182168331001627,
+        "y": 7.056176890149089
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.5,
-        "y": 0.6
+        "x": 5.850470756062768,
+        "y": 7.392582025677603
       },
       "prevControl": {
-        "x": 0.32595588733742586,
-        "y": 0.4205323236694217
+        "x": 2.51229671897748,
+        "y": 7.677232524956508
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Goated Middle",
+  "folder": "Chud autos",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -119.99999999999999
   },
   "useDefaultConstraints": true
 }

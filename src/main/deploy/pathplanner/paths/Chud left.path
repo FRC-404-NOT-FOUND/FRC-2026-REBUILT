@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.672897775269866,
-        "y": 7.648715022352309
+        "x": 3.2550766405080878,
+        "y": 7.334759038945456
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.24058487874465,
-        "y": 5.64586305278174
+        "x": 2.66756062767475,
+        "y": 5.322396576319543
       },
       "prevControl": {
-        "x": 2.8354028912460114,
-        "y": 6.562179820980158
+        "x": 2.745192582025677,
+        "y": 6.253980028530671
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 1.7,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -47,8 +47,8 @@
   "reversed": false,
   "folder": "Chud autos",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

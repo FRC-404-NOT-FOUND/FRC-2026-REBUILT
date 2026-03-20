@@ -84,7 +84,7 @@ public class DriveSubsystem extends SubsystemBase {
   private final List<Pose2d> rejectedPoseBuffer = new ArrayList<>();
 
   // PID control for auto lock on
-  public PIDController mFeedbackController = new PIDController(1.2, 0, 0); // TUNE THIS.
+  public PIDController mFeedbackController = new PIDController(1.5, 0, 0); // TUNE THIS.
   private double omega;
 
   // Pose estimation
@@ -152,8 +152,8 @@ public class DriveSubsystem extends SubsystemBase {
                                                                     // individual module feedforwards
         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic
                                         // drive trains
-            new PIDConstants(1.475, 0.0, 0.0), // Translation PID constants
-            new PIDConstants(1.1, 0.0, 0.0) // Rotation PID constants
+            new PIDConstants(2.75, 0.0, 0), // Translation PID constants
+            new PIDConstants(2, 0.0, 0.0) // Rotation PID constants
         ),
         config, // The robot configuration
         () -> {
