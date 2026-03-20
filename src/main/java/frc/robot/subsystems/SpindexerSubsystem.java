@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.SpindexerConstants;
 import com.revrobotics.PersistMode;
@@ -46,5 +47,10 @@ public class SpindexerSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // Called once per scheduler run. Add telemetry or periodic checks here.
+    if (motor.getOutputCurrent() > 35) {
+      SmartDashboard.putBoolean("Spindexer/Possible jam", true);
+    } else {
+      SmartDashboard.putBoolean("Spindexer/Possible jam", false);
+    }
   }
 }
