@@ -135,7 +135,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_gyro.enableOptionalMessages(true, true, true, false, false, false, false, false, false, false);
 
     mFeedbackController.enableContinuousInput(-Math.PI, Math.PI);
-    mFeedbackController.setTolerance(Math.toRadians(5));
+    mFeedbackController.setTolerance(Math.toRadians(1));
 
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
