@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.aimbot.StationaryAimbotCommand;
+import frc.robot.commands.aimbot.StationaryAimbotCommandData;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
@@ -88,11 +89,17 @@ public class RobotContainer {
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> drive.drive(
-                -MathUtil.applyDeadband(xSlewRateLimiter.calculate(a * Math.pow(driverController.getLeftY(), 3) + (1 - a) * driverController.getLeftY()),
+                -MathUtil.applyDeadband(
+                    xSlewRateLimiter.calculate(
+                        a * Math.pow(driverController.getLeftY(), 3) + (1 - a) * driverController.getLeftY()),
                     OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(ySlewRateLimiter.calculate(a * Math.pow(driverController.getLeftX(), 3) + (1 - a) * driverController.getLeftX()),
+                -MathUtil.applyDeadband(
+                    ySlewRateLimiter.calculate(
+                        a * Math.pow(driverController.getLeftX(), 3) + (1 - a) * driverController.getLeftX()),
                     OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(rSlewRateLimiter.calculate(a * Math.pow(driverController.getRightX(), 3) + (1 - a) * driverController.getRightX()),
+                -MathUtil.applyDeadband(
+                    rSlewRateLimiter.calculate(
+                        a * Math.pow(driverController.getRightX(), 3) + (1 - a) * driverController.getRightX()),
                     OIConstants.kDriveDeadband),
                 true),
             drive));
@@ -132,16 +139,22 @@ public class RobotContainer {
     new JoystickButton(driverController, XboxController.Button.kB.value)
         .whileTrue(
             new SequentialCommandGroup(
-                new RunCommand(() -> shooter.setVelocity(ShooterSubsystem.lowVel), shooter)
+                new RunCommand(() -> {
+                  shooter.setVelocity(ShooterSubsystem.lowVel);
+                  kicker.reverseKicker();
+                }, shooter, kicker)
                     .withTimeout(1), // spin up shooter alone first
                 new RunCommand(() -> {
                   shooter.setVelocity(ShooterSubsystem.lowVel);
                   kicker.startKicker();
                   spindexer.startSpindexer();
-                }, shooter, kicker, spindexer)).finallyDo(() -> {
+                  intake.spinIntake();
+                }, shooter, kicker, spindexer, intake))
+                .finallyDo(() -> {
                   shooter.stopShooter();
                   kicker.stopKicker();
                   spindexer.stopSpindexer();
+                  intake.stopIntake();
                 }));
 
     new JoystickButton(driverController, XboxController.Button.kX.value)
@@ -159,12 +172,10 @@ public class RobotContainer {
                   spindexer.stopSpindexer();
                 }));
 
-    /*
-     * new JoystickButton(driverController, XboxController.Button.kStart.value)
-     * .onTrue(new InstantCommand(
-     * () -> drive.setX(),
-     * drive));
-     */
+    new JoystickButton(driverController, XboxController.Button.kLeftBumper.value)
+        .whileTrue(new RunCommand(
+            () -> drive.setX(),
+            drive));
 
     new JoystickButton(driverController, XboxController.Button.kBack.value)
         .onTrue(new InstantCommand(
@@ -186,6 +197,15 @@ public class RobotContainer {
 
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
         .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
+
+    // D pad up = up offset
+    new Trigger(() -> driverController.getPOV() == 0)
+        .onTrue(new InstantCommand(
+            () -> StationaryAimbotCommandData.addSixInches()));
+    // D pad down = down offset
+    new Trigger(() -> driverController.getPOV() == 180)
+        .onTrue(new InstantCommand(
+            () -> StationaryAimbotCommandData.minusSixInches()));
   }
 
   /**
