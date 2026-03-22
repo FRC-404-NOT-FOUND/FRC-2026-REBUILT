@@ -68,7 +68,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
     NamedCommands.registerCommand("Stationary Aimbot",
-        new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
+        new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake));
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -157,20 +157,12 @@ public class RobotContainer {
                   intake.stopIntake();
                 }));
 
-    new JoystickButton(driverController, XboxController.Button.kX.value)
-        .whileTrue(
-            new SequentialCommandGroup(
-                new RunCommand(() -> shooter.setVelocity(ShooterSubsystem.midVel), shooter)
-                    .withTimeout(1), // spin up shooter alone first
-                new RunCommand(() -> {
-                  shooter.setVelocity(ShooterSubsystem.midVel);
-                  kicker.startKicker();
-                  spindexer.startSpindexer();
-                }, shooter, kicker, spindexer)).finallyDo(() -> {
-                  shooter.stopShooter();
-                  kicker.stopKicker();
-                  spindexer.stopSpindexer();
-                }));
+    new Trigger(() -> driverController.getLeftTriggerAxis() > 0.5)
+        .whileTrue(new RunCommand(
+          () -> kicker.startKicker())
+        .finallyDo(
+          () -> kicker.stopKicker()
+        ));
 
     new JoystickButton(driverController, XboxController.Button.kLeftBumper.value)
         .whileTrue(new RunCommand(
@@ -196,7 +188,7 @@ public class RobotContainer {
             }, intake, spindexer));
 
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
-        .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer));
+        .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake));
 
     // D pad up = up offset
     new Trigger(() -> driverController.getPOV() == 0)

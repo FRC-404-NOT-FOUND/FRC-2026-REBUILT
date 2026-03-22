@@ -6,8 +6,6 @@ package frc.robot;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -17,6 +15,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.commands.aimbot.StationaryAimbotCommandData;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -55,7 +54,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    CameraServer.startAutomaticCapture();
+    StationaryAimbotCommandData.resetOffset();
   }
 
   /**

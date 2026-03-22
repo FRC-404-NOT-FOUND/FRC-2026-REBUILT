@@ -83,6 +83,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final List<Pose2d> rejectedPoseBuffer = new ArrayList<>();
 
+  private int periodicDelay = 0;
+
   // PID control for auto lock on
   public PIDController mFeedbackController = new PIDController(1.5, 0, 0); // TUNE THIS.
   private double omega;
@@ -135,7 +137,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_gyro.enableOptionalMessages(true, true, true, false, false, false, false, false, false, false);
 
     mFeedbackController.enableContinuousInput(-Math.PI, Math.PI);
-    mFeedbackController.setTolerance(Math.toRadians(1));
+    mFeedbackController.setTolerance(Math.toRadians(0.5));
 
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
@@ -186,7 +188,10 @@ public class DriveSubsystem extends SubsystemBase {
     robotPose.set(getPose());
     SmartDashboard.putNumber("Gyro raw: ", gyroAngle);
     rejectedPoses.set(rejectedPoseBuffer.toArray(new Pose2d[0]));
-    rejectedPoseBuffer.clear();
+    periodicDelay++;
+    if (periodicDelay % 25 == 0) {
+      rejectedPoseBuffer.clear();
+    }
   }
 
   /**

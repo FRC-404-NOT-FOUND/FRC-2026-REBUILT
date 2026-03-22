@@ -12,6 +12,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -21,6 +22,7 @@ public class StationaryAimbotCommand extends Command {
   private final ShooterSubsystem shooter;
   private final KickerSubsystem kicker;
   private final SpindexerSubsystem spindexer;
+  private final IntakeSubsystem intake;
 
   /**
    * Creates a new StationaryAimbotCommand.
@@ -31,20 +33,21 @@ public class StationaryAimbotCommand extends Command {
    * @param spindexer
    */
   public StationaryAimbotCommand(DriveSubsystem drive, ShooterSubsystem shooter, KickerSubsystem kicker,
-      SpindexerSubsystem spindexer) {
+      SpindexerSubsystem spindexer, IntakeSubsystem intake) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.drive = drive;
     this.shooter = shooter;
     this.kicker = kicker;
     this.spindexer = spindexer;
-    addRequirements(drive, shooter, kicker, spindexer);
+    this.intake = intake;
+    addRequirements(drive, shooter, kicker, spindexer, intake);
   }
 
   @Override
   public void initialize() {
     kicker.reverseKicker();
+    intake.spinIntake();
   }
-
 
   @Override
   public void execute() {
@@ -104,8 +107,8 @@ public class StationaryAimbotCommand extends Command {
       spindexer.startSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", true);
     } else {
-      //kicker.stopKicker();
-      //spindexer.stopSpindexer();
+      // kicker.stopKicker();
+      // spindexer.stopSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", false);
     }
   }
@@ -116,6 +119,7 @@ public class StationaryAimbotCommand extends Command {
     spindexer.stopSpindexer();
     kicker.stopKicker();
     shooter.stopShooter();
+    intake.stopIntake();
     drive.endLockOn();
   }
 

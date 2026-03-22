@@ -72,6 +72,12 @@
           "name": "Start Intake"
         }
       }
+    },
+    {
+      "name": "Stop Intake",
+      "waypointRelativePos": 2.0,
+      "endWaypointRelativePos": null,
+      "command": null
     }
   ],
   "globalConstraints": {
