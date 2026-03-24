@@ -23,6 +23,7 @@ public class StationaryAimbotCommand extends Command {
   private final KickerSubsystem kicker;
   private final SpindexerSubsystem spindexer;
   private final IntakeSubsystem intake;
+  private boolean alwaysKick;
 
   /**
    * Creates a new StationaryAimbotCommand.
@@ -33,13 +34,14 @@ public class StationaryAimbotCommand extends Command {
    * @param spindexer
    */
   public StationaryAimbotCommand(DriveSubsystem drive, ShooterSubsystem shooter, KickerSubsystem kicker,
-      SpindexerSubsystem spindexer, IntakeSubsystem intake) {
+      SpindexerSubsystem spindexer, IntakeSubsystem intake, boolean alwaysKick) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.drive = drive;
     this.shooter = shooter;
     this.kicker = kicker;
     this.spindexer = spindexer;
     this.intake = intake;
+    this.alwaysKick = alwaysKick;
     addRequirements(drive, shooter, kicker, spindexer, intake);
   }
 
@@ -102,7 +104,7 @@ public class StationaryAimbotCommand extends Command {
     SmartDashboard.putBoolean("Aimbot/Shooter At Speed", shooter.shooterWithinTolerance(vS));
     SmartDashboard.putBoolean("Aimbot/Drive At Heading", drive.mFeedbackController.atSetpoint());
 
-    if (shooter.shooterWithinTolerance(vS)) {
+    if (shooter.shooterWithinTolerance(vS) || alwaysKick) {
       kicker.startKicker();
       spindexer.startSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", true);

@@ -30,7 +30,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder motorOneEncoder;
   private final SparkFlexConfig motorOneConfig;
 
-  private static final double shooterVelTolerance = 50; // plus or minus rad/sec
+  private static final double shooterVelTolerance = 80; // plus or minus rad/sec
 
   private double kS = 0.15; // these both still need to be tuned
   private double kV = 0.0169; // Approximation
