@@ -126,7 +126,8 @@ public final class Constants {
     public static final double g = 9.81; // gravity
     public static final double radius = Units.inchesToMeters(2); // shooter wheel
 
-    public static final int shooterCanID = 5;
+    public static final int shooter1CanID = 5;
+    public static final int shooter2CanID = 14;
 
     public static final Transform3d shooterOffset = new Transform3d(new Translation3d(-0.254, -0.1778, 0.4318),
         new Rotation3d(0, 0, Math.PI / 2));
@@ -151,9 +152,9 @@ public final class Constants {
     public static final String cam2 = "Intake Camera";
 
     // Camera offsets from robot center
-    public static final Transform3d kRobotToCamOne = new Transform3d(new Translation3d(-0.127, 0.3175, 0.51435),
+    public static final Transform3d kRobotToCamOne = new Transform3d(new Translation3d(-0.1285875, 0.3175, 0.51435),
         new Rotation3d(0, 0, Math.PI / 2));
-    public static final Transform3d kRobotToCamTwo = new Transform3d(new Translation3d(0.3175, -0.206375, 0.365125),
+    public static final Transform3d kRobotToCamTwo = new Transform3d(new Translation3d(0.3175, -0.1793875, 0.36195),
         new Rotation3d(0, 0, 0));
 
     // April tags

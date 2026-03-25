@@ -27,8 +27,10 @@ public class ShooterSubsystem extends SubsystemBase {
   public static final int midVel = 500;
 
   private final SparkFlex motorOne;
+  private final SparkFlex motorTwo;
   private final RelativeEncoder motorOneEncoder;
-  private final SparkFlexConfig motorOneConfig;
+  private final RelativeEncoder motorTwoEncoder;
+  private final SparkFlexConfig motorConfig;
 
   private static final double shooterVelTolerance = 80; // plus or minus rad/sec
 
@@ -50,15 +52,19 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
-    motorOne = new SparkFlex(ShooterConstants.shooterCanID, MotorType.kBrushless);
+    motorOne = new SparkFlex(ShooterConstants.shooter1CanID, MotorType.kBrushless);
+    motorTwo = new SparkFlex(ShooterConstants.shooter2CanID, MotorType.kBrushless);
     motorOneEncoder = motorOne.getEncoder();
-    motorOneConfig = new SparkFlexConfig();
+    motorTwoEncoder = motorTwo.getEncoder();
+    motorConfig = new SparkFlexConfig();
 
-    motorOneConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
-    motorOneConfig.inverted(false);
-    motorOneConfig.smartCurrentLimit(50);
-    motorOneConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gear box, rad/sec
-    motorOne.configure(motorOneConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    motorConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
+    motorConfig.inverted(false);
+    motorConfig.smartCurrentLimit(50);
+    motorConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gear box, rad/sec
+    motorOne.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    motorConfig.follow(motorOne, true);
+    motorTwo.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     shooterVelocityTable = NetworkTableInstance.getDefault().getTable("Shooter");
   }
@@ -101,7 +107,8 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    shooterVelocityTable.getEntry("CurrentVelocity").setDouble(motorOneEncoder.getVelocity());
+    shooterVelocityTable.getEntry("MotorOneVelocity").setDouble(motorOneEncoder.getVelocity());
+    shooterVelocityTable.getEntry("MotorTwoVelocity").setDouble(motorTwoEncoder.getVelocity());
     shooterVelocityTable.getEntry("SetpointVelocity").setDouble(shooterSetpoint.position);
   }
 }
