@@ -23,7 +23,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class ShooterSubsystem extends SubsystemBase {
   // Empirically tuned velocities to use on the shooter at low and mid
   // distances from the hub
-  public static final int lowVel = 300;
+  public static final int lowVel = 100;
   public static final int midVel = 500;
 
   private final SparkFlex motorOne;
@@ -32,7 +32,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder motorTwoEncoder;
   private final SparkFlexConfig motorConfig;
 
-  private static final double shooterVelTolerance = 80; // plus or minus rad/sec
+  private static final double shooterVelTolerance = 80; // This is the tolerance for if we're ready to shoot
 
   private double kS = 0.15; // these both still need to be tuned
   private double kV = 0.0169; // Approximation
@@ -41,6 +41,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double kP = 0.02;
   private double kD = 0.003;
   private PIDController shooterFeedback = new PIDController(kP, 0, kD);
+  private double feedback = 0.0;
 
   private double kMaxVelocity = 710;
   private double kMaxAcceleration = 710;
@@ -67,6 +68,8 @@ public class ShooterSubsystem extends SubsystemBase {
     motorTwo.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     shooterVelocityTable = NetworkTableInstance.getDefault().getTable("Shooter");
+
+    shooterFeedback.setTolerance(5); // This is the tolerance for PID oscillations
   }
 
   /**
@@ -83,9 +86,13 @@ public class ShooterSubsystem extends SubsystemBase {
         new TrapezoidProfile.State(radPerSec, 0));
     double nextVelocity = shooterSetpoint.position;
 
-    double voltage = shooterFeedforward.calculateWithVelocities(currentVelocity, nextVelocity)
-        + shooterFeedback.calculate(currentVelocity, nextVelocity);
-    motorOne.setVoltage(voltage);
+    double feedforward = shooterFeedforward.calculateWithVelocities(currentVelocity, nextVelocity);
+    feedback = shooterFeedback.calculate(currentVelocity, nextVelocity);
+    if (shooterFeedback.atSetpoint()) {
+      feedback = 0.0;
+      shooterFeedback.reset(); // prevents derivative spike
+    }
+    motorOne.setVoltage(feedforward + feedback);
   }
 
   /** Stop spinning the shooter wheel. */
