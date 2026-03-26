@@ -23,7 +23,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class ShooterSubsystem extends SubsystemBase {
   // Empirically tuned velocities to use on the shooter at low and mid
   // distances from the hub
-  public static final int lowVel = 100;
+  public static final int lowVel = 300;
   public static final int midVel = 500;
 
   private final SparkFlex motorOne;
@@ -32,15 +32,14 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder motorTwoEncoder;
   private final SparkFlexConfig motorConfig;
 
-  private static final double shooterVelTolerance = 80; // This is the tolerance for if we're ready to shoot
+  private static final double shooterVelTolerance = 50; // Tolerance for if we're ready to shoot
 
-  private double kS = 0.15; // these both still need to be tuned
-  private double kV = 0.0169; // Approximation
+  private double kS = 0.16; // Perfectly tuned
+  private double kV = 0.017; // Perfectly tuned
   private SimpleMotorFeedforward shooterFeedforward = new SimpleMotorFeedforward(kS, kV);
 
-  private double kP = 0.02;
-  private double kD = 0.003;
-  private PIDController shooterFeedback = new PIDController(kP, 0, kD);
+  private double kP = 0.036; // Probably pretty perfect
+  private PIDController shooterFeedback = new PIDController(kP, 0, 0);
   private double feedback = 0.0;
 
   private double kMaxVelocity = 710;
@@ -69,7 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     shooterVelocityTable = NetworkTableInstance.getDefault().getTable("Shooter");
 
-    shooterFeedback.setTolerance(5); // This is the tolerance for PID oscillations
+    shooterFeedback.setTolerance(5); // Tolerance for kP oscillations 
   }
 
   /**
