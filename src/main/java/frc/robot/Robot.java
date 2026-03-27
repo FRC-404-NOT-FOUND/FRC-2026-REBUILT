@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.commands.aimbot.StationaryAimbotCommandData;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -30,6 +32,8 @@ public class Robot extends TimedRobot {
   private final RobotContainer m_robotContainer;
 
   private boolean hasAutoRun = false;
+
+  private final Field2d field = new Field2d();
 
   private final StructArrayPublisher<Pose2d> actualPathPublisher = NetworkTableInstance.getDefault()
       .getStructArrayTopic("Actual auto path", Pose2d.struct).publish();
@@ -55,6 +59,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     StationaryAimbotCommandData.resetOffset();
+
+    SmartDashboard.putData("Field", field);
   }
 
   /**
@@ -78,6 +84,8 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     vision.periodic();
+
+    field.setRobotPose(m_robotContainer.getDriveSubsystem().getPose());
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

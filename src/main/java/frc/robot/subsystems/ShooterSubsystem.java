@@ -38,7 +38,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double kV = 0.017; // Perfectly tuned
   private SimpleMotorFeedforward shooterFeedforward = new SimpleMotorFeedforward(kS, kV);
 
-  private double kP = 0.036; // Probably pretty perfect
+  private double kP = 0.032; // Probably pretty perfect
   private PIDController shooterFeedback = new PIDController(kP, 0, 0);
   private double feedback = 0.0;
 
@@ -68,7 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     shooterVelocityTable = NetworkTableInstance.getDefault().getTable("Shooter");
 
-    shooterFeedback.setTolerance(5); // Tolerance for kP oscillations 
+    shooterFeedback.setTolerance(5); // Tolerance for kP oscillations
   }
 
   /**
@@ -113,8 +113,10 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    shooterVelocityTable.getEntry("MotorOneVelocity").setDouble(motorOneEncoder.getVelocity());
+    shooterVelocityTable.getEntry("MotorOneVelocity").setDouble(Math.floor(motorOneEncoder.getVelocity() * 100) / 100);
     shooterVelocityTable.getEntry("MotorTwoVelocity").setDouble(motorTwoEncoder.getVelocity());
-    shooterVelocityTable.getEntry("SetpointVelocity").setDouble(shooterSetpoint.position);
+    shooterVelocityTable.getEntry("SetpointVelocity").setDouble((Math.floor(shooterSetpoint.position * 100) / 100));
+    shooterVelocityTable.getEntry("VelocityError")
+        .setDouble(Math.floor(shooterSetpoint.position - motorOneEncoder.getVelocity() * 100) / 100);
   }
 }

@@ -68,7 +68,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
     NamedCommands.registerCommand("Stationary Aimbot",
-        new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false));
+        new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, false));
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -188,7 +188,7 @@ public class RobotContainer {
             }, intake, spindexer));
 
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
-        .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false));
+        .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, false));
 
     // D pad up = up offset
     new Trigger(() -> driverController.getPOV() == 0)

@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -131,6 +132,12 @@ public final class Constants {
 
     public static final Transform3d shooterOffset = new Transform3d(new Translation3d(-0.254, -0.1778, 0.4318),
         new Rotation3d(0, 0, Math.PI / 2));
+
+    public static final InterpolatingDoubleTreeMap shooterVelocityMap = new InterpolatingDoubleTreeMap();
+    // Meters -> rad/s
+    static {
+      shooterVelocityMap.put(0.0, 0.0);
+    }
   }
 
   public static final class IntakeConstants {
@@ -158,7 +165,8 @@ public final class Constants {
         new Rotation3d(0, 0, 0));
 
     // April tags
-    public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+    public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
+        .loadField(AprilTagFields.k2026RebuiltAndymark);
 
     // Basic filtering thresholds
     public static double maxAmbiguity = 0.2;

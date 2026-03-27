@@ -5,6 +5,7 @@
 package frc.robot.commands.aimbot;
 
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
@@ -13,7 +14,6 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -24,6 +24,8 @@ public class StationaryAimbotCommand extends Command {
   private final SpindexerSubsystem spindexer;
   private final IntakeSubsystem intake;
   private boolean alwaysKick;
+  private boolean useLookupTable;
+  private InterpolatingDoubleTreeMap table = ShooterConstants.shooterVelocityMap;
 
   /**
    * Creates a new StationaryAimbotCommand.
@@ -34,7 +36,7 @@ public class StationaryAimbotCommand extends Command {
    * @param spindexer
    */
   public StationaryAimbotCommand(DriveSubsystem drive, ShooterSubsystem shooter, KickerSubsystem kicker,
-      SpindexerSubsystem spindexer, IntakeSubsystem intake, boolean alwaysKick) {
+      SpindexerSubsystem spindexer, IntakeSubsystem intake, boolean alwaysKick, boolean useLookupTable) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.drive = drive;
     this.shooter = shooter;
@@ -42,6 +44,7 @@ public class StationaryAimbotCommand extends Command {
     this.spindexer = spindexer;
     this.intake = intake;
     this.alwaysKick = alwaysKick;
+    this.useLookupTable = useLookupTable;
     addRequirements(drive, shooter, kicker, spindexer, intake);
   }
 
@@ -64,15 +67,7 @@ public class StationaryAimbotCommand extends Command {
     double y = relativePose.getZ();
     double k = 0.225;
 
-    // --- Logging: pose & geometry ---
-    SmartDashboard.putNumber("Aimbot/Shooter Pose X (m)", shooterPose.getX());
-    SmartDashboard.putNumber("Aimbot/Shooter Pose Y (m)", shooterPose.getY());
-    SmartDashboard.putNumber("Aimbot/Shooter Pose Z (m)", shooterPose.getZ());
-    SmartDashboard.putNumber("Aimbot/Hub Pose Z (m)", hubPose.getZ());
-    SmartDashboard.putNumber("Aimbot/Relative X (m)", relativePose.getX());
-    SmartDashboard.putNumber("Aimbot/Relative Y (m)", relativePose.getY());
-    SmartDashboard.putNumber("Aimbot/Vertical Distance Y (m)", y);
-    SmartDashboard.putNumber("Aimbot/Horizontal Distance X (m)", x);
+    SmartDashboard.putNumber("Aimbot/Horizontal Distance X (m)", Math.floor(x * 100) / 100);
     SmartDashboard.putNumber("Aimbot/Fudge Offset (m)", StationaryAimbotCommandData.getOffsetMeters());
 
     drive.lockRotationOnHub();
@@ -80,6 +75,7 @@ public class StationaryAimbotCommand extends Command {
 
     double tanThetaX = Math.tan(theta) * x;
 
+    // Don't shoot if shot isn't physically possible
     if (tanThetaX <= y) {
       shooter.stopShooter();
       kicker.stopKicker();
@@ -90,14 +86,9 @@ public class StationaryAimbotCommand extends Command {
     SmartDashboard.putBoolean("Aimbot/Shot Possible", true);
 
     double vB = (x / Math.cos(theta)) * Math.sqrt(g / (2 * (tanThetaX - y)));
-    double vS = vB / (k * rS);
-
-    // --- Logging: solver outputs ---
-    SmartDashboard.putNumber("Aimbot/Required Ball Velocity (m-s)", vB);
-    SmartDashboard.putNumber("Aimbot/Required Shooter (rad-s)", vS);
-    SmartDashboard.putNumber("Aimbot/Required Shooter (RPM)", vS * 60 / (2 * Math.PI));
-    SmartDashboard.putString("Aimbot/Alliance",
-        DriverStation.getAlliance().map(Object::toString).orElse("UNKNOWN"));
+    double vS = (useLookupTable)
+        ? table.get(x)
+        : vB / (k * rS);
 
     shooter.setVelocity(vS);
 
@@ -110,7 +101,7 @@ public class StationaryAimbotCommand extends Command {
       SmartDashboard.putBoolean("Aimbot/Feeding", true);
     } else {
       // kicker.stopKicker();
-      // spindexer.stopSpindexer();
+      spindexer.stopSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", false);
     }
   }
