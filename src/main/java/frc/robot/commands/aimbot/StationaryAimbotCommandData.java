@@ -6,27 +6,29 @@ package frc.robot.commands.aimbot;
 
 import edu.wpi.first.math.util.Units;
 
-/** Add your docs here. */
-public class StationaryAimbotCommandData {
-    public static double offset = 0; // Fudge factor to add to model if needed mid-match
+/** Holds shared aimbot state that persists across command instances. */
+public final class StationaryAimbotCommandData {
+  private static double offset = 0; // fudge factor to adjust trajectory mid-match
 
-    /** Add six inches to the aimbot fudge factor. */
-    public static void addSixInches() {
-        offset += Units.inchesToMeters(6);
-    }
+  private StationaryAimbotCommandData() {}
 
-    /** Subtract six inches from the aimbot fudge factor. */
-    public static void minusSixInches() {
-        offset -= Units.inchesToMeters(6);
-    }
+  /** Adds six inches to the aimbot fudge factor. */
+  public static void addSixInches() {
+    offset += Units.inchesToMeters(6);
+  }
 
-    /** Reset aimbot fudge factor to zero. */
-    public static void resetOffset() {
-        offset = 0;
-    }
+  /** Subtracts six inches from the aimbot fudge factor. */
+  public static void minusSixInches() {
+    offset -= Units.inchesToMeters(6);
+  }
 
-    /** Return aimbot fudge factor. */
-    public static double getOffsetMeters() {
-        return offset;
-    }
+  /** Resets the aimbot fudge factor to zero. */
+  public static void resetOffset() {
+    offset = 0;
+  }
+
+  /** Returns the current fudge factor in meters. */
+  public static double getOffsetMeters() {
+    return offset;
+  }
 }

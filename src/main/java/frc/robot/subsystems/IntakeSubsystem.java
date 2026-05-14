@@ -4,70 +4,65 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-import frc.robot.Constants.IntakeConstants;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.IntakeConstants;
 
 public class IntakeSubsystem extends SubsystemBase {
   private final SparkMax motor;
-  private final SparkMaxConfig motorConfig;
   private final SparkFlex vortexMotor;
-  private final SparkFlexConfig vortexConfig;
-  public boolean intakeIsSpinning;
+  private boolean spinning;
 
   /** Creates a new IntakeSubsystem. */
   public IntakeSubsystem() {
-    motor = new SparkMax(IntakeConstants.intakeCanID, MotorType.kBrushed);
-    motorConfig = new SparkMaxConfig();
-    vortexMotor = new SparkFlex(IntakeConstants.vortexCanID, MotorType.kBrushless);
-    vortexConfig = new SparkFlexConfig();
+    motor = new SparkMax(IntakeConstants.kIntakeCanId, MotorType.kBrushed);
+    vortexMotor = new SparkFlex(IntakeConstants.kVortexCanId, MotorType.kBrushless);
 
-    motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-    vortexConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-    motorConfig.inverted(true);
-    vortexConfig.inverted(true); // placeholder
-    motorConfig.smartCurrentLimit(35);
-    vortexConfig.smartCurrentLimit(35);
+    SparkMaxConfig motorConfig = new SparkMaxConfig();
+    motorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(35).inverted(true);
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    SparkFlexConfig vortexConfig = new SparkFlexConfig();
+    vortexConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(35).inverted(true);
     vortexMotor.configure(vortexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /** Spin the intake. */
   public void spinIntake() {
-    motor.set(1);
-    vortexMotor.set(1);
-    intakeIsSpinning = true;
+    motor.set(IntakeConstants.kForwardSpeed);
+    vortexMotor.set(IntakeConstants.kForwardSpeed);
+    spinning = true;
   }
 
-  /** Spin the intake in reverse for unjamming fuel. */
+  /** Spin the intake in reverse for unjamming. */
   public void reverseIntake() {
-    motor.set(-0.85);
-    vortexMotor.set(-0.85);
+    motor.set(IntakeConstants.kReverseSpeed);
+    vortexMotor.set(IntakeConstants.kReverseSpeed);
   }
 
-  /** Stop spinning the intake. */
+  /** Stop the intake. */
   public void stopIntake() {
     motor.set(0);
     vortexMotor.set(0);
-    intakeIsSpinning = false;
+    spinning = false;
+  }
+
+  /** Returns true if the intake is actively spinning forward. */
+  public boolean isSpinning() {
+    return spinning;
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-    if (motor.getOutputCurrent() > 30) {
-      SmartDashboard.putBoolean("Intake/Possible jam", true);
-    } else {
-      SmartDashboard.putBoolean("Intake/Possible jam", false);
-    }
+    SmartDashboard.putBoolean("Intake/Possible jam", motor.getOutputCurrent() > IntakeConstants.kJamCurrentThreshold);
   }
 }

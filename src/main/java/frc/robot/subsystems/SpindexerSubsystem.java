@@ -4,53 +4,47 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.SpindexerConstants;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.SpindexerConstants;
 
 public class SpindexerSubsystem extends SubsystemBase {
   private final SparkMax motor;
-  private final SparkMaxConfig motorConfig;
 
   /** Creates a new SpindexerSubsystem. */
   public SpindexerSubsystem() {
-    motor = new SparkMax(SpindexerConstants.spindexerCanID, MotorType.kBrushless);
-    motorConfig = new SparkMaxConfig();
+    motor = new SparkMax(SpindexerConstants.kSpindexerCanId, MotorType.kBrushless);
 
-    motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-    motorConfig.smartCurrentLimit(40);
-    motorConfig.inverted(true);
+    SparkMaxConfig motorConfig = new SparkMaxConfig();
+    motorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).inverted(true);
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /** Spin the spindexer. */
   public void startSpindexer() {
-    motor.set(0.6);
+    motor.set(SpindexerConstants.kForwardSpeed);
   }
 
-  /** Reverse spindexer for unjamming fuel. */
+  /** Reverse the spindexer for unjamming. */
   public void reverseSpindexer() {
-    motor.set(-0.5);
+    motor.set(SpindexerConstants.kReverseSpeed);
   }
 
-  /** Stop spinning the spindexer. */
+  /** Stop the spindexer. */
   public void stopSpindexer() {
-    motor.set(0.0);
+    motor.set(0);
   }
 
   @Override
   public void periodic() {
-    // Called once per scheduler run. Add telemetry or periodic checks here.
-    if (motor.getOutputCurrent() > 35) {
-      SmartDashboard.putBoolean("Spindexer/Possible jam", true);
-    } else {
-      SmartDashboard.putBoolean("Spindexer/Possible jam", false);
-    }
+    SmartDashboard.putBoolean("Spindexer/Possible jam",
+        motor.getOutputCurrent() > SpindexerConstants.kJamCurrentThreshold);
   }
 }

@@ -4,13 +4,30 @@
 
 package frc.robot;
 
+import java.io.IOException;
+
+import org.json.simple.parser.ParseException;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OIConstants;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.commands.aimbot.StationaryAimbotCommand;
 import frc.robot.commands.aimbot.StationaryAimbotCommandData;
 import frc.robot.subsystems.DriveSubsystem;
@@ -18,29 +35,14 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-
-import java.io.IOException;
-import org.json.simple.parser.ParseException;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 
 /*
- * This class is where the bulk of the robot should be declared.  Since Command-based is a
+ * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls).  Instead, the structure of the robot
+ * periodic methods (other than the scheduler calls). Instead, the structure of the robot
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems
   private final DriveSubsystem drive = new DriveSubsystem();
   private final ShooterSubsystem shooter = new ShooterSubsystem();
   private final IntakeSubsystem intake = new IntakeSubsystem();
@@ -52,19 +54,17 @@ public class RobotContainer {
   private final SlewRateLimiter ySlewRateLimiter;
   private final SlewRateLimiter rSlewRateLimiter;
 
+  // Blending factor between cubic (a=1) and linear (a=0) drive response curve
   private final double a;
 
-  // The driver's controller
-  XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
+  private final XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
 
-  // PathPlanner choose auto from SmartDashboard
   private final SendableChooser<Command> autoChooser;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    // PathPlanner commands
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
     NamedCommands.registerCommand("Stationary Aimbot",
@@ -73,20 +73,15 @@ public class RobotContainer {
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
-    // Configure the button bindings
     configureButtonBindings();
 
-    // Create slew rate limiters to prevent stuttering
-    xSlewRateLimiter = new SlewRateLimiter(1.8); // Rate limit is in seconds to max
+    xSlewRateLimiter = new SlewRateLimiter(1.8); // seconds to reach max
     ySlewRateLimiter = new SlewRateLimiter(1.8);
     rSlewRateLimiter = new SlewRateLimiter(2.5);
 
     a = 1.0;
 
-    // Configure default commands
     drive.setDefaultCommand(
-        // The left stick controls translation of the robot.
-        // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> drive.drive(
                 -MathUtil.applyDeadband(
@@ -105,22 +100,15 @@ public class RobotContainer {
             drive));
   }
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be
-   * created by
-   * instantiating a {@link edu.wpi.first.wpilibj.GenericHID} or one of its
-   * subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then calling
-   * passing it to a
-   * {@link JoystickButton}.
-   */
   private void configureButtonBindings() {
+    // Y: reverse intake
     new JoystickButton(driverController, XboxController.Button.kY.value)
         .whileTrue(new StartEndCommand(
             () -> intake.reverseIntake(),
             () -> intake.stopIntake(),
             intake));
 
+    // A: reverse all feed mechanisms (unjam)
     new JoystickButton(driverController, XboxController.Button.kA.value)
         .whileTrue(new StartEndCommand(
             () -> {
@@ -135,17 +123,17 @@ public class RobotContainer {
             },
             spindexer, kicker, intake));
 
-    // Have to actually turn this into a command probably, need spindexer + kicker
+    // B: spin up shooter then feed (low goal shot)
     new JoystickButton(driverController, XboxController.Button.kB.value)
         .whileTrue(
             new SequentialCommandGroup(
                 new RunCommand(() -> {
-                  shooter.setVelocity(ShooterSubsystem.lowVel);
+                  shooter.setVelocity(ShooterConstants.kLowVelocity);
                   kicker.reverseKicker();
                 }, shooter, kicker)
-                    .withTimeout(1), // spin up shooter alone first
+                    .withTimeout(1),
                 new RunCommand(() -> {
-                  shooter.setVelocity(ShooterSubsystem.lowVel);
+                  shooter.setVelocity(ShooterConstants.kLowVelocity);
                   kicker.startKicker();
                   spindexer.startSpindexer();
                   intake.spinIntake();
@@ -157,26 +145,29 @@ public class RobotContainer {
                   intake.stopIntake();
                 }));
 
+    // Left trigger: manual kicker forward
     new Trigger(() -> driverController.getLeftTriggerAxis() > 0.5)
         .whileTrue(new RunCommand(
-          () -> kicker.startKicker())
-        .finallyDo(
-          () -> kicker.stopKicker()
-        ));
+            () -> kicker.startKicker(), kicker)
+            .finallyDo(
+                () -> kicker.stopKicker()));
 
+    // Left bumper: lock wheels in X formation
     new JoystickButton(driverController, XboxController.Button.kLeftBumper.value)
         .whileTrue(new RunCommand(
             () -> drive.setX(),
             drive));
 
+    // Back: toggle driver camera mode
     new JoystickButton(driverController, XboxController.Button.kBack.value)
         .onTrue(new InstantCommand(
             () -> vision.toggleDriverCam()));
 
+    // Right bumper: toggle intake + spindexer + kicker sequence
     new JoystickButton(driverController, XboxController.Button.kRightBumper.value)
         .onTrue(new InstantCommand(
             () -> {
-              if (intake.intakeIsSpinning) {
+              if (intake.isSpinning()) {
                 intake.stopIntake();
                 spindexer.stopSpindexer();
                 kicker.stopKicker();
@@ -185,25 +176,23 @@ public class RobotContainer {
                 spindexer.startSpindexer();
                 kicker.reverseKicker();
               }
-            }, intake, spindexer));
+            }, intake, spindexer, kicker));
 
+    // Right trigger: stationary aimbot
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
         .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, false));
 
-    // D pad up = up offset
+    // D-pad up/down: adjust aimbot fudge factor
     new Trigger(() -> driverController.getPOV() == 0)
-        .onTrue(new InstantCommand(
-            () -> StationaryAimbotCommandData.addSixInches()));
-    // D pad down = down offset
+        .onTrue(new InstantCommand(() -> StationaryAimbotCommandData.addSixInches()));
     new Trigger(() -> driverController.getPOV() == 180)
-        .onTrue(new InstantCommand(
-            () -> StationaryAimbotCommandData.minusSixInches()));
+        .onTrue(new InstantCommand(() -> StationaryAimbotCommandData.minusSixInches()));
   }
 
   /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
+   * Returns the command to run during autonomous.
    *
-   * @return the command to run in autonomous
+   * @return The autonomous command.
    */
   public Command getAutonomousCommand() {
     return autoChooser.getSelected();
@@ -216,7 +205,7 @@ public class RobotContainer {
           .flatMap(path -> path.getPathPoses().stream())
           .toArray(Pose2d[]::new);
     } catch (IOException | ParseException e) {
-      e.printStackTrace();
+      DriverStation.reportError("Failed to load auto poses: " + e.getMessage(), e.getStackTrace());
       return new Pose2d[0];
     }
   }

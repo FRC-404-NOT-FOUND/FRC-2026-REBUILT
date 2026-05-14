@@ -4,57 +4,54 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.KickerConstants;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkFlexConfig;
 
 public class KickerSubsystem extends SubsystemBase {
   private final SparkFlex motor;
-  private final SparkFlexConfig motorConfig;
   private final RelativeEncoder motorEncoder;
+  private final NetworkTable telemetryTable;
 
-  private final NetworkTable kickerVelocityTable;
-
-  /** Creates a new KickerSubsytem. */
+  /** Creates a new KickerSubsystem. */
   public KickerSubsystem() {
-    motor = new SparkFlex(KickerConstants.kickerCanID, MotorType.kBrushless);
-    motorConfig = new SparkFlexConfig();
+    motor = new SparkFlex(KickerConstants.kKickerCanId, MotorType.kBrushless);
     motorEncoder = motor.getEncoder();
 
-    motorConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-    motorConfig.inverted(false);
-    motorConfig.smartCurrentLimit(35);
-    motorConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gear box, rad/sec
+    SparkFlexConfig motorConfig = new SparkFlexConfig();
+    motorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(35).inverted(false);
+    motorConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gearbox, rad/s
     motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    kickerVelocityTable = NetworkTableInstance.getDefault().getTable("Kicker");
+    telemetryTable = NetworkTableInstance.getDefault().getTable("Kicker");
   }
 
-  /** Spin the kicker wheel. */
+  /** Spin the kicker wheel forward. */
   public void startKicker() {
-    motor.set(0.3);
+    motor.set(KickerConstants.kForwardSpeed);
   }
 
-  /** Stop spinning the kicker wheel. */
+  /** Stop the kicker wheel. */
   public void stopKicker() {
     motor.set(0);
   }
 
+  /** Spin the kicker wheel in reverse to hold a note back. */
   public void reverseKicker() {
-    motor.set(-0.35);
+    motor.set(KickerConstants.kReverseSpeed);
   }
 
   @Override
   public void periodic() {
-    // Called once per scheduler run. Add telemetry or periodic checks here.
-    kickerVelocityTable.getEntry("CurrentVelocity").setDouble(motorEncoder.getVelocity());
+    telemetryTable.getEntry("CurrentVelocity").setDouble(motorEncoder.getVelocity());
   }
 }

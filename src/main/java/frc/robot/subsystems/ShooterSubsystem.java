@@ -4,78 +4,62 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ShooterConstants;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ShooterConstants;
 
 public class ShooterSubsystem extends SubsystemBase {
-  // Empirically tuned velocities to use on the shooter at low and mid
-  // distances from the hub
-  public static final int lowVel = 300;
-  public static final int midVel = 500;
-
   private final SparkFlex motorOne;
   private final SparkFlex motorTwo;
   private final RelativeEncoder motorOneEncoder;
   private final RelativeEncoder motorTwoEncoder;
-  private final SparkFlexConfig motorConfig;
 
-  private static final double shooterVelTolerance = 50; // Tolerance for if we're ready to shoot
+  private final SimpleMotorFeedforward shooterFeedforward =
+      new SimpleMotorFeedforward(ShooterConstants.kS, ShooterConstants.kV);
+  private final PIDController shooterFeedback = new PIDController(ShooterConstants.kP, 0, 0);
+  private final TrapezoidProfile shooterProfile = new TrapezoidProfile(
+      new TrapezoidProfile.Constraints(ShooterConstants.kMaxVelocity, ShooterConstants.kMaxAcceleration));
 
-  private double kS = 0.16; // Perfectly tuned
-  private double kV = 0.017; // Perfectly tuned
-  private SimpleMotorFeedforward shooterFeedforward = new SimpleMotorFeedforward(kS, kV);
-
-  private double kP = 0.032; // Probably pretty perfect
-  private PIDController shooterFeedback = new PIDController(kP, 0, 0);
+  private TrapezoidProfile.State shooterSetpoint = new TrapezoidProfile.State(0.0, 0.0);
   private double feedback = 0.0;
 
-  private double kMaxVelocity = 710;
-  private double kMaxAcceleration = 710;
-  private TrapezoidProfile shooterProfile = new TrapezoidProfile(
-      new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration));
-  private TrapezoidProfile.State shooterSetpoint = new TrapezoidProfile.State(0.0, 0.0);
-
-  private final NetworkTable shooterVelocityTable;
+  private final NetworkTable telemetryTable;
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
-    motorOne = new SparkFlex(ShooterConstants.shooter1CanID, MotorType.kBrushless);
-    motorTwo = new SparkFlex(ShooterConstants.shooter2CanID, MotorType.kBrushless);
+    motorOne = new SparkFlex(ShooterConstants.kShooter1CanId, MotorType.kBrushless);
+    motorTwo = new SparkFlex(ShooterConstants.kShooter2CanId, MotorType.kBrushless);
     motorOneEncoder = motorOne.getEncoder();
     motorTwoEncoder = motorTwo.getEncoder();
-    motorConfig = new SparkFlexConfig();
 
-    motorConfig.idleMode(SparkBaseConfig.IdleMode.kCoast);
-    motorConfig.inverted(false);
-    motorConfig.smartCurrentLimit(50);
-    motorConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gear box, rad/sec
+    SparkFlexConfig motorConfig = new SparkFlexConfig();
+    motorConfig.idleMode(IdleMode.kCoast).inverted(false).smartCurrentLimit(50);
+    motorConfig.encoder.velocityConversionFactor(2 * Math.PI / 60); // no gearbox, rad/s
     motorOne.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     motorConfig.follow(motorOne, true);
     motorTwo.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    shooterVelocityTable = NetworkTableInstance.getDefault().getTable("Shooter");
+    shooterFeedback.setTolerance(ShooterConstants.kFeedbackPidTolerance);
 
-    shooterFeedback.setTolerance(5); // Tolerance for kP oscillations
+    telemetryTable = NetworkTableInstance.getDefault().getTable("Shooter");
   }
 
   /**
    * Sets the angular velocity of the shooter wheel.
    *
-   * @param radPerSec Desired angular velocity of the shooter wheel in units of
-   *                  radians per second.
+   * @param radPerSec Desired angular velocity in radians per second.
    */
   public void setVelocity(double radPerSec) {
     double currentVelocity = motorOneEncoder.getVelocity();
@@ -94,29 +78,27 @@ public class ShooterSubsystem extends SubsystemBase {
     motorOne.setVoltage(feedforward + feedback);
   }
 
-  /** Stop spinning the shooter wheel. */
+  /** Stop the shooter wheel. */
   public void stopShooter() {
     motorOne.set(0);
     shooterSetpoint = new TrapezoidProfile.State(0.0, 0.0);
   }
 
   /**
-   * Check if shooter wheel is close enough to target angular velocity.
+   * Returns true if the shooter wheel is within tolerance of the target velocity.
    *
-   * @param target Target angular velocity.
-   * @return Whether or shooter is within tolerance.
+   * @param target Target angular velocity in radians per second.
    */
   public boolean shooterWithinTolerance(double target) {
-    return Math.abs(target - motorOneEncoder.getVelocity()) <= shooterVelTolerance;
+    return Math.abs(target - motorOneEncoder.getVelocity()) <= ShooterConstants.kVelocityTolerance;
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-    shooterVelocityTable.getEntry("MotorOneVelocity").setDouble(Math.floor(motorOneEncoder.getVelocity() * 100) / 100);
-    shooterVelocityTable.getEntry("MotorTwoVelocity").setDouble(motorTwoEncoder.getVelocity());
-    shooterVelocityTable.getEntry("SetpointVelocity").setDouble((Math.floor(shooterSetpoint.position * 100) / 100));
-    shooterVelocityTable.getEntry("VelocityError")
-        .setDouble(Math.floor(shooterSetpoint.position - motorOneEncoder.getVelocity() * 100) / 100);
+    double velocity = motorOneEncoder.getVelocity();
+    telemetryTable.getEntry("MotorOneVelocity").setDouble(Math.floor(velocity * 100) / 100);
+    telemetryTable.getEntry("MotorTwoVelocity").setDouble(motorTwoEncoder.getVelocity());
+    telemetryTable.getEntry("SetpointVelocity").setDouble(Math.floor(shooterSetpoint.position * 100) / 100);
+    telemetryTable.getEntry("VelocityError").setDouble(Math.floor((shooterSetpoint.position - velocity) * 100) / 100);
   }
 }

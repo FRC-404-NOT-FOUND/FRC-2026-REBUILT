@@ -27,9 +27,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
-  private Command m_autonomousCommand;
-  private Vision vision;
-  private final RobotContainer m_robotContainer;
+  private Command autonomousCommand;
+  private final Vision vision;
+  private final RobotContainer robotContainer;
 
   private boolean hasAutoRun = false;
 
@@ -52,8 +52,8 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
-    vision = m_robotContainer.getVision();
+    robotContainer = new RobotContainer();
+    vision = robotContainer.getVision();
   }
 
   @Override
@@ -85,7 +85,7 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     vision.periodic();
 
-    field.setRobotPose(m_robotContainer.getDriveSubsystem().getPose());
+    field.setRobotPose(robotContainer.getDriveSubsystem().getPose());
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -105,10 +105,10 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     flipGyro();
     actualPath.clear();
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-    if (m_autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(m_autonomousCommand);
-      desiredPathPublisher.set(m_robotContainer.getAutoPoses());
+    autonomousCommand = robotContainer.getAutonomousCommand();
+    if (autonomousCommand != null) {
+      CommandScheduler.getInstance().schedule(autonomousCommand);
+      desiredPathPublisher.set(robotContainer.getAutoPoses());
     }
     hasAutoRun = true;
   }
@@ -116,7 +116,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    actualPath.add(m_robotContainer.getDriveSubsystem().getPose());
+    actualPath.add(robotContainer.getDriveSubsystem().getPose());
   }
 
   @Override
@@ -126,8 +126,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
+    if (autonomousCommand != null) {
+      autonomousCommand.cancel();
     }
     if (!hasAutoRun) {
       flipGyro();
@@ -164,10 +164,10 @@ public class Robot extends TimedRobot {
   private void flipGyro() {
     var alliance = DriverStation.getAlliance();
     boolean isRed = alliance.isPresent() && alliance.get() == Alliance.Red;
-    m_robotContainer.getDriveSubsystem().zeroHeading();
-    m_robotContainer.getDriveSubsystem().resetPose(
+    robotContainer.getDriveSubsystem().zeroHeading();
+    robotContainer.getDriveSubsystem().resetPose(
         new Pose2d(
-            m_robotContainer.getDriveSubsystem().getPose().getTranslation(),
+            robotContainer.getDriveSubsystem().getPose().getTranslation(),
             isRed ? Rotation2d.fromDegrees(180) : new Rotation2d()));
   }
 }

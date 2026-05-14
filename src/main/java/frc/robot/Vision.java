@@ -7,12 +7,12 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import frc.robot.Constants.VisionConstants;
-import frc.robot.subsystems.DriveSubsystem;
+
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -21,16 +21,19 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 
+import frc.robot.Constants.VisionConstants;
+import frc.robot.subsystems.DriveSubsystem;
+
 public class Vision {
   private final DriveSubsystem drive;
 
-  private final PhotonCamera camera1 = new PhotonCamera(VisionConstants.cam1);
-  private final PhotonCamera camera2 = new PhotonCamera(VisionConstants.cam2);
+  private final PhotonCamera camera1 = new PhotonCamera(VisionConstants.kCam1Name);
+  private final PhotonCamera camera2 = new PhotonCamera(VisionConstants.kCam2Name);
 
-  private PhotonPoseEstimator poseEstimator1 = new PhotonPoseEstimator(VisionConstants.kTagLayout,
-      VisionConstants.kRobotToCamOne);
-  private PhotonPoseEstimator poseEstimator2 = new PhotonPoseEstimator(VisionConstants.kTagLayout,
-      VisionConstants.kRobotToCamTwo);
+  private final PhotonPoseEstimator poseEstimator1 = new PhotonPoseEstimator(
+      VisionConstants.kTagLayout, VisionConstants.kRobotToCam1);
+  private final PhotonPoseEstimator poseEstimator2 = new PhotonPoseEstimator(
+      VisionConstants.kTagLayout, VisionConstants.kRobotToCam2);
 
   private final StructArrayPublisher<Pose3d> cam1SeenTags = NetworkTableInstance.getDefault()
       .getStructArrayTopic("Vision/Cam1DetectedTags", Pose3d.struct)
@@ -48,53 +51,46 @@ public class Vision {
   }
 
   public void periodic() {
-    // This method will be called once per scheduler run
     var result1 = camera1.getAllUnreadResults();
     var result2 = camera2.getAllUnreadResults();
 
     List<Pose3d> cam1Poses = new ArrayList<>();
     List<Pose3d> cam2Poses = new ArrayList<>();
 
-    /*
-     * Go through all tags red from PhotonVision per camera,
-     * estimate posistion and add it to kalman filter in drive.
-     */
-    Optional<EstimatedRobotPose> estimation1;
-    for (int i = 0; i < result1.size(); i++) {
-      estimation1 = poseEstimator1.estimateCoprocMultiTagPose(result1.get(i));
-      if (estimation1.isEmpty()) {
-        estimation1 = poseEstimator1.estimateLowestAmbiguityPose(result1.get(i));
+    for (PhotonPipelineResult result : result1) {
+      Optional<EstimatedRobotPose> estimation = poseEstimator1.estimateCoprocMultiTagPose(result);
+      if (estimation.isEmpty()) {
+        estimation = poseEstimator1.estimateLowestAmbiguityPose(result);
       }
-      if (estimation1.isPresent()) {
-        drive.addVisionMeasurement(estimation1.get(), calculateStdDevs(result1.get(i), 0));
+      if (estimation.isPresent()) {
+        drive.addVisionMeasurement(estimation.get(), calculateStdDevs(result, 0));
       }
-
-      result1.get(i).getTargets().forEach(target -> VisionConstants.kTagLayout.getTagPose(target.getFiducialId())
-          .ifPresent(cam1Poses::add));
+      result.getTargets().forEach(target ->
+          VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).ifPresent(cam1Poses::add));
     }
-    Optional<EstimatedRobotPose> estimation2;
-    for (int i = 0; i < result2.size(); i++) {
-      estimation2 = poseEstimator2.estimateCoprocMultiTagPose(result2.get(i));
-      if (estimation2.isEmpty()) {
-        estimation2 = poseEstimator2.estimateLowestAmbiguityPose(result2.get(i));
-      }
 
-      if (estimation2.isPresent()) {
-        drive.addVisionMeasurement(estimation2.get(), calculateStdDevs(result2.get(i), 1));
+    for (PhotonPipelineResult result : result2) {
+      Optional<EstimatedRobotPose> estimation = poseEstimator2.estimateCoprocMultiTagPose(result);
+      if (estimation.isEmpty()) {
+        estimation = poseEstimator2.estimateLowestAmbiguityPose(result);
       }
-      result2.get(i).getTargets().forEach(target -> VisionConstants.kTagLayout.getTagPose(target.getFiducialId())
-          .ifPresent(cam2Poses::add));
+      if (estimation.isPresent()) {
+        drive.addVisionMeasurement(estimation.get(), calculateStdDevs(result, 1));
+      }
+      result.getTargets().forEach(target ->
+          VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).ifPresent(cam2Poses::add));
     }
+
     cam1SeenTags.set(cam1Poses.toArray(new Pose3d[0]));
     cam2SeenTags.set(cam2Poses.toArray(new Pose3d[0]));
   }
 
-  // Largely taken from the AdvantageKit template, props to 6328
+  // Largely adapted from the AdvantageKit template (6328)
   /**
-   * Method to calculate standard deviations.
+   * Calculates standard deviations for a vision measurement.
    *
-   * @param result      Photonvision results from camera.
-   * @param cameraIndex The camera you are getting results from.
+   * @param result      Pipeline result from the camera.
+   * @param cameraIndex Index of the camera (for per-camera trust factors).
    */
   private Matrix<N3, N1> calculateStdDevs(PhotonPipelineResult result, int cameraIndex) {
     int tagCount = result.getTargets().size();
@@ -112,19 +108,17 @@ public class Vision {
 
     double stdDevFactor = Math.pow(avgDistance, 2.0) / tagCount;
 
-    double linearStdDev = VisionConstants.linearStdDevBaseline * stdDevFactor;
-    double angularStdDev = VisionConstants.angularStdDevBaseline * stdDevFactor;
+    double linearStdDev = VisionConstants.kLinearStdDevBaseline * stdDevFactor;
+    double angularStdDev = VisionConstants.kAngularStdDevBaseline * stdDevFactor;
 
-    // If multi-tag solve, trust it more
     if (tagCount > 1) {
-      linearStdDev *= VisionConstants.linearStdDevMultitagFactor;
-      angularStdDev *= VisionConstants.angularStdDevMultitagFactor;
+      linearStdDev *= VisionConstants.kLinearStdDevMultitagFactor;
+      angularStdDev *= VisionConstants.kAngularStdDevMultitagFactor;
     }
 
-    // Per-camera trust factor
-    if (cameraIndex < VisionConstants.cameraStdDevFactors.length) {
-      linearStdDev *= VisionConstants.cameraStdDevFactors[cameraIndex];
-      angularStdDev *= VisionConstants.cameraStdDevFactors[cameraIndex];
+    if (cameraIndex < VisionConstants.kCameraStdDevFactors.length) {
+      linearStdDev *= VisionConstants.kCameraStdDevFactors[cameraIndex];
+      angularStdDev *= VisionConstants.kCameraStdDevFactors[cameraIndex];
     }
 
     return new Matrix<>(Nat.N3(), Nat.N1(), new double[] {
@@ -134,6 +128,7 @@ public class Vision {
     });
   }
 
+  /** Toggles the intake camera between driver mode and vision mode. */
   public void toggleDriverCam() {
     isDriverMode = !isDriverMode;
     camera2.setDriverMode(isDriverMode);

@@ -6,38 +6,39 @@ package frc.robot.commands.aimbot;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.KickerSubsystem;
-import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.KickerSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.SpindexerSubsystem;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class StationaryAimbotCommand extends Command {
   private final DriveSubsystem drive;
   private final ShooterSubsystem shooter;
   private final KickerSubsystem kicker;
   private final SpindexerSubsystem spindexer;
   private final IntakeSubsystem intake;
-  private boolean alwaysKick;
-  private boolean useLookupTable;
-  private InterpolatingDoubleTreeMap table = ShooterConstants.shooterVelocityMap;
+  private final boolean alwaysKick;
+  private final boolean useLookupTable;
+  private final InterpolatingDoubleTreeMap velocityTable = ShooterConstants.kVelocityMap;
 
   /**
    * Creates a new StationaryAimbotCommand.
-   * 
-   * @param drive
-   * @param shooter
-   * @param kicker
-   * @param spindexer
+   *
+   * @param drive          Drive subsystem for heading lock.
+   * @param shooter        Shooter subsystem.
+   * @param kicker         Kicker subsystem.
+   * @param spindexer      Spindexer subsystem.
+   * @param intake         Intake subsystem.
+   * @param alwaysKick     If true, feed regardless of shooter speed.
+   * @param useLookupTable If true, use distance->velocity map instead of ballistic calculation.
    */
   public StationaryAimbotCommand(DriveSubsystem drive, ShooterSubsystem shooter, KickerSubsystem kicker,
       SpindexerSubsystem spindexer, IntakeSubsystem intake, boolean alwaysKick, boolean useLookupTable) {
-    // Use addRequirements() here to declare subsystem dependencies.
     this.drive = drive;
     this.shooter = shooter;
     this.kicker = kicker;
@@ -50,6 +51,7 @@ public class StationaryAimbotCommand extends Command {
 
   @Override
   public void initialize() {
+    // Reverse kicker to hold note back until shooter reaches speed
     kicker.reverseKicker();
     intake.spinIntake();
   }
@@ -57,15 +59,15 @@ public class StationaryAimbotCommand extends Command {
   @Override
   public void execute() {
     Pose3d hubPose = FieldConstants.getHubPose();
-    Pose3d shooterPose = new Pose3d(drive.getPose()).plus(ShooterConstants.shooterOffset);
+    Pose3d shooterPose = new Pose3d(drive.getPose()).plus(ShooterConstants.kShooterOffset);
     Pose3d relativePose = hubPose.relativeTo(shooterPose);
 
-    double theta = ShooterConstants.theta;
-    double rS = ShooterConstants.radius;
-    double g = ShooterConstants.g;
+    double theta = ShooterConstants.kTheta;
+    double rS = ShooterConstants.kWheelRadius;
+    double g = ShooterConstants.kGravity;
     double x = Math.hypot(relativePose.getX(), relativePose.getY()) + StationaryAimbotCommandData.getOffsetMeters();
     double y = relativePose.getZ();
-    double k = 0.225;
+    double k = 0.225; // empirical spin-to-velocity ratio
 
     SmartDashboard.putNumber("Aimbot/Horizontal Distance X (m)", Math.floor(x * 100) / 100);
     SmartDashboard.putNumber("Aimbot/Fudge Offset (m)", StationaryAimbotCommandData.getOffsetMeters());
@@ -75,7 +77,7 @@ public class StationaryAimbotCommand extends Command {
 
     double tanThetaX = Math.tan(theta) * x;
 
-    // Don't shoot if shot isn't physically possible
+    // Don't shoot if the ballistic trajectory is physically impossible
     if (tanThetaX <= y) {
       shooter.stopShooter();
       kicker.stopKicker();
@@ -86,27 +88,24 @@ public class StationaryAimbotCommand extends Command {
     SmartDashboard.putBoolean("Aimbot/Shot Possible", true);
 
     double vB = (x / Math.cos(theta)) * Math.sqrt(g / (2 * (tanThetaX - y)));
-    double vS = (useLookupTable)
-        ? table.get(x)
-        : vB / (k * rS);
+    double vS = useLookupTable ? velocityTable.get(x) : vB / (k * rS);
 
     shooter.setVelocity(vS);
 
     SmartDashboard.putBoolean("Aimbot/Shooter At Speed", shooter.shooterWithinTolerance(vS));
-    SmartDashboard.putBoolean("Aimbot/Drive At Heading", drive.mFeedbackController.atSetpoint());
+    SmartDashboard.putBoolean("Aimbot/Drive At Heading", drive.isAtHeading());
 
     if (shooter.shooterWithinTolerance(vS) || alwaysKick) {
       kicker.startKicker();
       spindexer.startSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", true);
     } else {
-      // kicker.stopKicker();
+      // Kicker intentionally left reversing (from initialize) to hold note back until shooter is at speed
       spindexer.stopSpindexer();
       SmartDashboard.putBoolean("Aimbot/Feeding", false);
     }
   }
 
-  // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     spindexer.stopSpindexer();
@@ -116,7 +115,6 @@ public class StationaryAimbotCommand extends Command {
     drive.endLockOn();
   }
 
-  // Returns true when the command should end.
   @Override
   public boolean isFinished() {
     return false;
