@@ -102,4 +102,30 @@ public class MAXSwerveModule {
   public void resetEncoders() {
     drivingEncoder.setPosition(0);
   }
+
+  /**
+   * Points the wheel straight forward and applies raw voltage to the drive motor,
+   * bypassing the velocity PID. Used only for SysId characterization.
+   *
+   * @param volts Voltage to apply to the driving motor.
+   */
+  public void setDriveVoltage(double volts) {
+    turningClosedLoopController.setSetpoint(chassisAngularOffset, ControlType.kPosition);
+    drivingSpark.setVoltage(volts);
+  }
+
+  /** Returns the voltage actually being applied to the driving motor. */
+  public double getDriveAppliedVolts() {
+    return drivingSpark.getAppliedOutput() * drivingSpark.getBusVoltage();
+  }
+
+  /** Returns the driving encoder position in meters. */
+  public double getDrivePositionMeters() {
+    return drivingEncoder.getPosition();
+  }
+
+  /** Returns the driving encoder velocity in meters per second. */
+  public double getDriveVelocityMps() {
+    return drivingEncoder.getVelocity();
+  }
 }

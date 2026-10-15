@@ -38,13 +38,19 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.PathPlannerConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.VisionConstants;
-
+import edu.wpi.first.units.measure.Voltage;
+import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import org.photonvision.EstimatedRobotPose;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -94,11 +100,46 @@ public class DriveSubsystem extends SubsystemBase {
           rearRight.getPosition()
       }, new Pose2d());
 
+  private void voltageDrive(Voltage voltage) {
+    double v = voltage.in(Volts);
+    frontLeft.setDriveVoltage(v);
+    frontRight.setDriveVoltage(v);
+    rearLeft.setDriveVoltage(v);
+    rearRight.setDriveVoltage(v);
+  }
+
+  private void logMotors(SysIdRoutineLog log) {
+    logModule(log, "drive-fl", frontLeft);
+    logModule(log, "drive-fr", frontRight);
+    logModule(log, "drive-rl", rearLeft);
+    logModule(log, "drive-rr", rearRight);
+  }
+
+  private void logModule(SysIdRoutineLog log, String name, MAXSwerveModule m) {
+    log.motor(name)
+        .voltage(Volts.of(m.getDriveAppliedVolts()))
+        .linearPosition(Meters.of(m.getDrivePositionMeters()))
+        .linearVelocity(MetersPerSecond.of(m.getDriveVelocityMps()));
+  }
+
+  private final SysIdRoutine routine = new SysIdRoutine(
+      new SysIdRoutine.Config(),
+      new SysIdRoutine.Mechanism(this::voltageDrive, this::logMotors, this));
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return routine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return routine.dynamic(direction);
+  }
+
   /**
    * Adds a vision pose estimate to the Kalman filter.
    *
    * @param visionPose Estimated pose from AprilTag vision.
-   * @param stdDevs    Standard deviations representing how much to trust this measurement.
+   * @param stdDevs    Standard deviations representing how much to trust this
+   *                   measurement.
    */
   public void addVisionMeasurement(EstimatedRobotPose visionPose, Matrix<N3, N1> stdDevs) {
     Pose2d pose = visionPose.estimatedPose.toPose2d();
@@ -275,7 +316,9 @@ public class DriveSubsystem extends SubsystemBase {
     }
   }
 
-  /** Returns true if the robot's heading is locked on the hub within tolerance. */
+  /**
+   * Returns true if the robot's heading is locked on the hub within tolerance.
+   */
   public boolean isAtHeading() {
     return feedbackController.atSetpoint();
   }

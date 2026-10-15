@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.commands.aimbot.StationaryAimbotCommand;
@@ -101,49 +102,29 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
-    // Y: reverse intake
-    new JoystickButton(driverController, XboxController.Button.kY.value)
-        .whileTrue(new StartEndCommand(
-            () -> intake.reverseIntake(),
-            () -> intake.stopIntake(),
-            intake));
-
-    // A: reverse all feed mechanisms (unjam)
+    // A: reverse intake
     new JoystickButton(driverController, XboxController.Button.kA.value)
-        .whileTrue(new StartEndCommand(
-            () -> {
-              spindexer.reverseSpindexer();
-              kicker.reverseKicker();
-              intake.reverseIntake();
-            },
-            () -> {
-              spindexer.stopSpindexer();
-              kicker.stopKicker();
-              intake.stopIntake();
-            },
-            spindexer, kicker, intake));
+        .whileTrue(new RunCommand(
+            () -> drive.sysIdQuasistatic(Direction.kForward),
+            drive));
 
-    // B: spin up shooter then feed (low goal shot)
+    // B: reverse all feed mechanisms (unjam)
     new JoystickButton(driverController, XboxController.Button.kB.value)
-        .whileTrue(
-            new SequentialCommandGroup(
-                new RunCommand(() -> {
-                  shooter.setVelocity(ShooterConstants.kLowVelocity);
-                  kicker.reverseKicker();
-                }, shooter, kicker)
-                    .withTimeout(1),
-                new RunCommand(() -> {
-                  shooter.setVelocity(ShooterConstants.kLowVelocity);
-                  kicker.startKicker();
-                  spindexer.startSpindexer();
-                  intake.spinIntake();
-                }, shooter, kicker, spindexer, intake))
-                .finallyDo(() -> {
-                  shooter.stopShooter();
-                  kicker.stopKicker();
-                  spindexer.stopSpindexer();
-                  intake.stopIntake();
-                }));
+        .whileTrue(new RunCommand(
+            () -> drive.sysIdQuasistatic(Direction.kReverse),
+            drive));
+
+    // X: reverse intake
+    new JoystickButton(driverController, XboxController.Button.kX.value)
+        .whileTrue(new RunCommand(
+            () -> drive.sysIdDynamic(Direction.kForward),
+            drive));
+
+    // Y: reverse all feed mechanisms (unjam)
+    new JoystickButton(driverController, XboxController.Button.kY.value)
+        .whileTrue(new RunCommand(
+            () -> drive.sysIdDynamic(Direction.kReverse),
+            drive));
 
     // Left trigger: manual kicker forward
     new Trigger(() -> driverController.getLeftTriggerAxis() > 0.5)
