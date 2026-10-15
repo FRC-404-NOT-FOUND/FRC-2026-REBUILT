@@ -102,25 +102,25 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
-    // A: reverse intake
+    // A: Quasiatic forward
     new JoystickButton(driverController, XboxController.Button.kA.value)
         .whileTrue(new RunCommand(
             () -> drive.sysIdQuasistatic(Direction.kForward),
             drive));
 
-    // B: reverse all feed mechanisms (unjam)
+    // B: Quasiatic reverse
     new JoystickButton(driverController, XboxController.Button.kB.value)
         .whileTrue(new RunCommand(
             () -> drive.sysIdQuasistatic(Direction.kReverse),
             drive));
 
-    // X: reverse intake
+    // X: Dynamic forward
     new JoystickButton(driverController, XboxController.Button.kX.value)
         .whileTrue(new RunCommand(
             () -> drive.sysIdDynamic(Direction.kForward),
             drive));
 
-    // Y: reverse all feed mechanisms (unjam)
+    // Y: Dynamic reverse
     new JoystickButton(driverController, XboxController.Button.kY.value)
         .whileTrue(new RunCommand(
             () -> drive.sysIdDynamic(Direction.kReverse),
