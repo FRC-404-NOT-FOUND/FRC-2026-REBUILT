@@ -61,11 +61,11 @@ public final class Constants {
     public static final boolean kGyroReversed = false;
 
     // PathPlanner path-following PID gains
-    public static final double kPathplannerTranslationP = 2.75;
+    public static final double kPathplannerTranslationP = 2.85;
     public static final double kPathplannerRotationP = 2.0;
 
     // Heading lock-on PID gains
-    public static final double kHeadingP = 1.5;
+    public static final double kHeadingP = 1.35;
     public static final double kHeadingToleranceDegrees = 0.5;
   }
 
@@ -153,8 +153,8 @@ public final class Constants {
   public static final class SpindexerConstants {
     public static final int kSpindexerCanId = 7;
 
-    public static final double kForwardSpeed = 0.6;
-    public static final double kReverseSpeed = -0.5;
+    public static final double kForwardSpeed = 0.9;
+    public static final double kReverseSpeed = -0.7;
     public static final double kJamCurrentThreshold = 35; // amps
   }
 

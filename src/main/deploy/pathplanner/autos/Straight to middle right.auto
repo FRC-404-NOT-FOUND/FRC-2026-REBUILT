@@ -21,6 +21,12 @@
           "data": {
             "name": "Stationary Aimbot"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "STMR3"
+          }
         }
       ]
     }

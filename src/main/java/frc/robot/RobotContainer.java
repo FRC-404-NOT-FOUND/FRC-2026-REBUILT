@@ -68,7 +68,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.spinIntake()));
     NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> intake.stopIntake()));
     NamedCommands.registerCommand("Stationary Aimbot",
-        new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, false));
+       new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, false)
+           .withTimeout(10.0));
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
