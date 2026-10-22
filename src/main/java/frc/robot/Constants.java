@@ -61,7 +61,7 @@ public final class Constants {
     public static final boolean kGyroReversed = false;
 
     // PathPlanner path-following PID gains
-    public static final double kPathplannerTranslationP = 2.85;
+    public static final double kPathplannerTranslationP = 1.0;
     public static final double kPathplannerRotationP = 2.0;
 
     // Heading lock-on PID gains
@@ -75,10 +75,11 @@ public final class Constants {
     public static final double kDrivingMotorFreeSpeedRps = NeoMotorConstants.kFreeSpeedRpm / 60;
     public static final double kWheelDiameterMeters = 0.0762;
     public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI;
-    // 45 teeth on wheel bevel, 22 teeth on first-stage spur, 15 teeth on bevel pinion
+    // 45 teeth on wheel bevel, 22 teeth on first-stage spur, 15 teeth on bevel
+    // pinion
     public static final double kDrivingMotorReduction = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15);
-    public static final double kDriveWheelFreeSpeedRps =
-        (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDrivingMotorReduction;
+    public static final double kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters)
+        / kDrivingMotorReduction;
   }
 
   public static final class OIConstants {
@@ -131,13 +132,18 @@ public final class Constants {
     public static final double kFeedbackPidTolerance = 5;
 
     // Named preset velocities (rad/s)
-    public static final double kLowVelocity = 300;
+    public static final double kLowVelocity = 650;
     public static final double kMidVelocity = 500;
 
     // Distance (m) -> velocity (rad/s) lookup table for aimbot
     public static final InterpolatingDoubleTreeMap kVelocityMap = new InterpolatingDoubleTreeMap();
     static {
-      kVelocityMap.put(0.0, 0.0);
+      kVelocityMap.put(1.79, 300.0);
+      kVelocityMap.put(1.9, 400.0);
+      kVelocityMap.put(2.3, 450.0);
+      kVelocityMap.put(3.0, 660.0);
+      kVelocityMap.put(3.3, 700.0);
+      kVelocityMap.put(3.5, 750.0);
     }
   }
 
@@ -177,8 +183,8 @@ public final class Constants {
         new Translation3d(0.3175, -0.1793875, 0.36195),
         new Rotation3d(0, 0, 0));
 
-    public static final AprilTagFieldLayout kTagLayout =
-        AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+    public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
+        .loadField(AprilTagFields.k2026RebuiltAndymark);
 
     // Pose filtering thresholds
     public static final double kMaxAmbiguity = 0.2;
@@ -191,7 +197,7 @@ public final class Constants {
     // Per-camera trust multipliers
     public static final double[] kCameraStdDevFactors = new double[] {
         1.0, // Camera 1
-        1.0  // Camera 2
+        1.0 // Camera 2
     };
 
     // Multi-tag solve trust multipliers (more stable than full 3D solve)

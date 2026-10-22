@@ -80,7 +80,7 @@ public class RobotContainer {
     ySlewRateLimiter = new SlewRateLimiter(1.8);
     rSlewRateLimiter = new SlewRateLimiter(2.5);
 
-    a = 1.0;
+    a = 1;
 
     drive.setDefaultCommand(
         new RunCommand(
@@ -181,7 +181,7 @@ public class RobotContainer {
 
     // Right trigger: stationary aimbot
     new Trigger(() -> driverController.getRightTriggerAxis() > 0.5)
-        .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, false));
+        .whileTrue(new StationaryAimbotCommand(drive, shooter, kicker, spindexer, intake, false, true));
 
     // D-pad up/down: adjust aimbot fudge factor
     new Trigger(() -> driverController.getPOV() == 0)
